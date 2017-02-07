@@ -1,0 +1,47 @@
+[{
+        title: '@@auditrail.title@@',
+        properties:[{
+            name : 'id',
+            label : '@@auditrail.id@@',
+            type : 'textfield',
+            required : 'True',
+            regex_validation : '^[a-zA-Z0-9_]+$',
+            validation_message : '@@form.textfield.invalidId@@'
+        },{
+            name : 'tableName',
+            label : '@@auditrail.sourceTable@@',
+            type : 'textfield',
+            required : 'True'
+        },{
+            name : 'refKey',
+            label : '@@auditrail.refKey@@',
+            type : 'textfield',
+            required : 'True'
+        },{
+            name : 'columns',
+            label : '@@auditrail.columns.title@@',
+            type : 'grid',
+            columns : [{
+                key : 'columnId',
+                label : '@@auditrail.columns.id@@'
+            },
+            {
+                key : 'columnLabel',
+                label : '@@auditrail.columns.label@@'
+            }]
+        },{
+            name : 'enableSort',
+            label : '@@auditrail.enableSort@@',
+            type : 'checkbox',
+            value : 'False',
+            options : [{
+                value : 'true',
+                label : ''
+            }]
+        },{
+            name : 'sortBy',
+            label : '@@auditrail.sortBy@@',
+            description: '@@auditrail.sortBy.desc@@',
+            type : 'textfield'
+        }]
+}]
