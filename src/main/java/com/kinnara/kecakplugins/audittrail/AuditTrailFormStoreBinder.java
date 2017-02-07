@@ -34,7 +34,7 @@ public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getName() {
-		return "Kecak - Audit Trail Form Store Binder";
+		return "Kecak Audit Trail Form Store Binder";
 	}
 	
 	@Override
