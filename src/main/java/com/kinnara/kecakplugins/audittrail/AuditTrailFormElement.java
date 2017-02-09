@@ -1,28 +1,23 @@
 package com.kinnara.kecakplugins.audittrail;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-import org.enhydra.shark.api.client.wfmodel.WfActivity;
+
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
 import org.joget.apps.form.model.FormBuilderPaletteElement;
 import org.joget.apps.form.model.FormData;
+import org.joget.apps.form.model.FormRow;
+import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
@@ -34,36 +29,29 @@ import org.springframework.context.ApplicationContext;
  * @author Yonathan
  */
 public class AuditTrailFormElement extends Element implements FormBuilderPaletteElement {
-
     @Override
     public String renderTemplate(FormData formData, Map dataModel) {
         HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
         String template = "AuditTrailFormElement.ftl";
         // Data tables datas container
-        List datas = new ArrayList();
-        List headers = new ArrayList();
+        List<List<String>> datas = new ArrayList<List<String>>();
+        List<String> headers = new ArrayList<String>();
         
         // Column id container
-        List columnList = new ArrayList();
+        List<String> columnList = new ArrayList<String>();
         
         // Set datatables headerProp
-        Object[] obj = (Object[]) getProperty("columns");
-        StringBuilder sb = new StringBuilder();
-        if (obj != null && obj.length > 0) {
-            Map headerProp = null;
-            
-            
-            for (Object o : obj) {
-                headerProp = (HashMap) o;
+        Object[] columns = (Object[]) getProperty("columns");
+        if (columns != null && columns.length > 0) {
+            Map<String, String> headerProp = null;
+            for (Object o : columns) {
+                headerProp = (HashMap<String, String>) o;
                 columnList.add(headerProp.get("columnId"));
                 headers.add(headerProp.get("columnLabel"));
             }
             dataModel.put("headers", headers);
         }
         if (request != null) {
-            String tableName = "app_fd_" + getPropertyString("tableName");
-            String refKey = "c_" + getPropertyString("refKey");
-            
             ApplicationContext ac = AppUtil.getApplicationContext();
             
             // Get Parameter Value
@@ -88,48 +76,16 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
                     // parameter sudah processId
                     primaryKeyValue = request.getParameter("id");
                 }
-            
-//                LogUtil.info(ApproverAuditrail.class.getName(), "ProcessId: "+primaryKeyValue);
                 
-                DataSource ds = (DataSource) ac.getBean("setupDataSource");
-                Connection con = null;
-                PreparedStatement ps = null;
-                ResultSet rs = null;
-                try {
-                    con = ds.getConnection();
-                    String sql
-                            = "SELECT * "
-                            + "FROM " + tableName + " "
-                            + "WHERE " + refKey + "=? ";
-                    ps = con.prepareStatement(sql);
-//                    LogUtil.info(ApproverAuditrail.class.getName(), sql);
-                    ps.setString(1, primaryKeyValue);
-                    rs = ps.executeQuery();
-                    while (rs.next()) {
-                        List contentList = new ArrayList();
-                        for(int i = 0; i<columnList.size();i++){
-                            contentList.add(rs.getString("c_"+(String) columnList.get(i)));
-                        }
-                        datas.add(contentList);
+            	FormRowSet rowSet = formData.getLoadBinderData(this);
+            	for(FormRow row : rowSet) {                		
+            		List<String> contentList = new ArrayList<String>();
+                    for(int i = 0, size = columnList.size(); i < size;i++){
+                        contentList.add(row.getProperty((String)columnList.get(i)));
                     }
-
-                } catch (SQLException ex) {
-                    Logger.getLogger(AuditTrailFormElement.class.getName()).log(Level.SEVERE, null, ex);
-                } finally {
-                    try {
-                        if (rs != null) {
-                            rs.close();
-                        }
-                        if (ps != null) {
-                            ps.close();
-                        }
-                        if (con != null) {
-                            con.close();
-                        }
-                    } catch (SQLException ex) {
-                        Logger.getLogger(AuditTrailFormElement.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                    datas.add(contentList);
+            	}
+                
                 String enableSort = getPropertyString("enableSort");
                 if(enableSort!=null && enableSort.equals("true")){
                     if(getPropertyString("sortBy")!=null && !getPropertyString("sortBy").equals("")){
@@ -149,7 +105,7 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     }
 
     public String getName() {
-        return "Audit Trail";
+        return "Kecak Audit Trail Form Element";
     }
 
     public String getVersion() {
@@ -161,7 +117,7 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     }
 
     public String getLabel() {
-        return "Audit Trail";
+        return "Audit Trail Form Element";
     }
 
     public String getClassName() {
@@ -169,7 +125,7 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     }
 
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", null, true, "/messages/AuditTrailFormElement");
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", new Object[] { AuditTrailMultirowLoadBinder.class.getName() } , true, "/messages/AuditTrailFormElement");
     }
 
     public String getFormBuilderCategory() {
@@ -201,5 +157,4 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     public void webService(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
 }

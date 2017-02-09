@@ -7,6 +7,7 @@ import java.util.Map;
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.FormDefinition;
+import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.Element;
@@ -24,9 +25,7 @@ import org.joget.workflow.model.service.WorkflowManager;
  * @author aristo
  *
  */
-public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
-	private Map<String, Form> formCache = new HashMap<String, Form>();
-	
+public class AuditTrailFormStoreBinder extends WorkflowFormBinder{	
 	@Override
 	public String getClassName() {
 		return getClass().getName();
@@ -48,16 +47,15 @@ public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
 	}
 	
 	@Override
-	public FormRowSet store(Element element, FormRowSet rows, FormData formData) {		
-		String processId = formData.getProcessId();
-		 
-		WorkflowManager wfManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-		WorkflowAssignment wfAssignment = (WorkflowAssignment) wfManager.getAssignment(formData.getActivityId());
-		Form auditForm = generateForm(getPropertyString("formDefId"));
+	public FormRowSet store(Element element, FormRowSet rows, FormData formData) {
+		AppService appService = (AppService)AppUtil.getApplicationContext().getBean("appService");
+		String processId = appService.getOriginProcessId(formData.getProcessId());
+		
+		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 		if(auditForm != null && rows != null && rows.size() > 0 && processId != null) {
 			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
 			
-			String primaryKeyValue = wfAssignment != null ? wfAssignment.getActivityId() : processId;
+			String primaryKeyValue = null; // use UUID
 			
 			final FormRow formRow = rows.get(0);
 			final FormData auditFormData = new FormData();
@@ -82,6 +80,11 @@ public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
 		return super.store(element, rows, formData);
 	}
 	
+	@Override
+	public String getDescription() {
+		return "Store form data to audit trail table";
+	}
+	
 	private void getLeavesChildren(Element element, OnLeafChild listener) {
 		Collection<Element> children = element.getChildren(); 
 		if(children == null  || children.isEmpty()) {
@@ -95,35 +98,5 @@ public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
 	
 	private interface OnLeafChild {
 		void onLeafChild(Element element);
-	}
-	
-	protected Form generateForm(String formDefId) {
-		return generateForm(formDefId, formCache);
-	}
-	
-	protected Form generateForm(String formDefId, Map<String, Form> formCache) {
-    	// check in cache
-    	if(formCache != null && formCache.containsKey(formDefId))
-    		return formCache.get(formDefId);
-    	
-    	// proceed without cache    	
-    	FormService formService = (FormService)AppUtil.getApplicationContext().getBean("formService");
-        Form form = null;
-        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
-        if (appDef != null && formDefId != null && !formDefId.isEmpty()) {
-            FormDefinitionDao formDefinitionDao = (FormDefinitionDao)AppUtil.getApplicationContext().getBean("formDefinitionDao");
-            FormDefinition formDef = formDefinitionDao.loadById(formDefId, appDef);
-            if (formDef != null) {
-                String json = formDef.getJson();
-                form = (Form)formService.createElementFromJson(json);
-                
-                // put in cache if possible
-                if(formCache != null)
-                	formCache.put(formDefId, form);
-                
-                return form;
-            }
-        }
-        return null;
 	}
 }

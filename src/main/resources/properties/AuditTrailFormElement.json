@@ -7,17 +7,26 @@
             required : 'True',
             regex_validation : '^[a-zA-Z0-9_]+$',
             validation_message : '@@form.textfield.invalidId@@'
-        },{
-            name : 'tableName',
-            label : '@@auditrail.sourceTable@@',
-            type : 'textfield',
-            required : 'True'
-        },{
-            name : 'refKey',
-            label : '@@auditrail.refKey@@',
-            type : 'textfield',
-            required : 'True'
-        },{
+        }, {
+	        name : 'loadBinder',
+	        label : '@@auditrail.loadBinder@@',
+	        type : 'elementselect',
+	        value : '%s',
+	        options_ajax : '[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadMultiRowElementBinder',
+	        url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions'
+	    }, {
+				name : 'formDefId',
+				label : '@@auditrail.formDefId@@',
+				type : 'selectbox',
+				required : 'true',
+				options_ajax : '[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options'
+		}, {
+				name : 'fieldProcessId',
+				label : '@@auditrail.fieldProcessId@@',
+				type : 'textfield',
+				required : 'true',
+				description : '@@auditTrailFormStoreBinder.fieldProcessId.description@@'
+		}, {
             name : 'columns',
             label : '@@auditrail.columns.title@@',
             type : 'grid',

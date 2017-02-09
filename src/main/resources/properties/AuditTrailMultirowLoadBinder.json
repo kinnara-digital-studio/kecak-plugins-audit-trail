@@ -1,0 +1,20 @@
+[
+	{
+		title : '@@auditTrailMultirowLoadBinder.title@@',
+		properties : [
+			{
+				name : 'formDefId',
+				label : '@@auditTrailMultirowLoadBinder.formDefId@@',
+				type : 'selectbox',
+				required : 'true',
+				options_ajax : '[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options'
+			}, {
+				name : 'fieldProcessId',
+				label : '@@auditTrailMultirowLoadBinder.fieldProcessId@@',
+				type : 'textfield',
+				required : 'true',
+				description : '@@auditTrailMultirowLoadBinder.fieldProcessId.description@@'
+			}
+		]
+	}
+]

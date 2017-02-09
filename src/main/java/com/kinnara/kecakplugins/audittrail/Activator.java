@@ -16,6 +16,7 @@ public class Activator implements BundleActivator {
         //Register plugin here
         registrationList.add(context.registerService(AuditTrailFormStoreBinder.class.getName(), new AuditTrailFormStoreBinder(), null));
         registrationList.add(context.registerService(AuditTrailFormElement.class.getName(), new AuditTrailFormElement(), null));
+        registrationList.add(context.registerService(AuditTrailMultirowLoadBinder.class.getName(), new AuditTrailMultirowLoadBinder(), null));
     }
 
     public void stop(BundleContext context) {
