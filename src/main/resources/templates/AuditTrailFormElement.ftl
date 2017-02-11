@@ -1,18 +1,29 @@
 <div class="form-cell" ${elementMetaData!}>
 
 <#if error=='false'>
-<link rel="stylesheet" type="text/css" href="${request.contextPath}/plugin/com.kecak.enterprise.ApproverAuditrail/css/jquery.dataTables.min.css">
-<script type="text/javascript" src="${request.contextPath}/plugin/com.kecak.enterprise.ApproverAuditrail/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" type="text/css" href="${request.contextPath}/plugin/${className}/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function(){
-    $('#${elementParamName!}').DataTable({
-        "pagingType": "full_numbers",
-        "order": [[ ${sort!}, "desc" ]]
+$(document).ready(function(){ 
+    $('table#${elementParamName!}${element.properties.elementUniqueKey!}').DataTable({
+        "pagingType": "full_numbers"
+		<#if sort?? >
+			,"order": [
+				<#assign first = true>
+				<#list sort as sortItem>
+					<#if !first>, </#if> 
+					[ ${sortItem['index']!}, "${sortItem['mode']!}" ]
+					<#assign first = false>
+				</#list>
+			]
+		</#if>
     });
+    
+    <#-- $('table#${elementParamName!}${element.properties.elementUniqueKey!}').DataTable({"pagingType": "full_numbers"});  -->
 });
 
 </script>
-<table id="${elementParamName!}" class="table table-striped table-bordered" cellspacing="0" width="100%">
+<table id="${elementParamName!}${element.properties.elementUniqueKey!}" class="table table-striped table-bordered" cellspacing="0" width="100%">
     <thead>
         <tr>
             <#list headers as header>
@@ -32,7 +43,7 @@ $(document).ready(function(){
     </tbody>
 </table>
 <#else>
-<table id="${elementParamName!}">
+<table id="${elementParamName!}${element.properties.elementUniqueKey!}">
     <thead>
         <tr>
             <#list headers as header>

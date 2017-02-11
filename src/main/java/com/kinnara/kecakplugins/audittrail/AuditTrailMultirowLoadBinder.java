@@ -41,7 +41,6 @@ implements FormLoadBinder,
 	}
 
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {
-		LogUtil.info(getClassName(), "primaryKey : " + primaryKey);
 		ApplicationContext appContext = AppUtil.getApplicationContext();
 		FormDataDao formDataDao = (FormDataDao) appContext.getBean("formDataDao");
         Form form = AuditTrailUtil.generateForm(getPropertyString("formDefId"));

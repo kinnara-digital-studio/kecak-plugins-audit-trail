@@ -1,56 +1,55 @@
 [{
-        title: '@@auditrail.title@@',
+        title: '@@auditTrailFormElement.title@@',
         properties:[{
             name : 'id',
-            label : '@@auditrail.id@@',
+            label : '@@auditTrailFormElement.id@@',
             type : 'textfield',
             required : 'True',
             regex_validation : '^[a-zA-Z0-9_]+$',
             validation_message : '@@form.textfield.invalidId@@'
         }, {
 	        name : 'loadBinder',
-	        label : '@@auditrail.loadBinder@@',
+	        label : '@@auditTrailFormElement.loadBinder@@',
 	        type : 'elementselect',
 	        value : '%s',
 	        options_ajax : '[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadMultiRowElementBinder',
 	        url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions'
 	    }, {
-				name : 'formDefId',
-				label : '@@auditrail.formDefId@@',
-				type : 'selectbox',
-				required : 'true',
-				options_ajax : '[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options'
-		}, {
-				name : 'fieldProcessId',
-				label : '@@auditrail.fieldProcessId@@',
-				type : 'textfield',
-				required : 'true',
-				description : '@@auditTrailFormStoreBinder.fieldProcessId.description@@'
-		}, {
             name : 'columns',
-            label : '@@auditrail.columns.title@@',
+            label : '@@auditTrailFormElement.columns@@',
             type : 'grid',
             columns : [{
                 key : 'columnId',
-                label : '@@auditrail.columns.id@@'
+                label : '@@auditTrailFormElement.columns.id@@',
+                required : 'true'
             },
             {
                 key : 'columnLabel',
-                label : '@@auditrail.columns.label@@'
-            }]
-        },{
-            name : 'enableSort',
-            label : '@@auditrail.enableSort@@',
-            type : 'checkbox',
-            value : 'False',
-            options : [{
-                value : 'true',
-                label : ''
+                label : '@@auditTrailFormElement.columns.label@@'
             }]
         },{
             name : 'sortBy',
-            label : '@@auditrail.sortBy@@',
-            description: '@@auditrail.sortBy.desc@@',
-            type : 'textfield'
+            label : '@@auditTrailFormElement.sortBy@@',
+            description: '@@auditTrailFormElement.sortBy.desc@@',
+            type : 'grid',
+            columns : [
+            	{
+            		key : 'index',
+            		label : '@@auditTrailFormElement.sortBy.index@@',
+            		required : 'true'
+            	}, {
+            		key : 'mode',
+            		label : '@@auditTrailFormElement.sortBy.mode@@',
+            		options : [
+            			{
+            				value : 'asc',
+            				label : 'ASC'
+            			}, {
+            				value : 'desc',
+            				label : 'DESC'
+            			}
+            		]
+            	}
+            ]
         }]
 }]
