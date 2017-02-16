@@ -13,11 +13,13 @@
 	        type : 'elementselect',
 	        value : '%s',
 	        options_ajax : '[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadMultiRowElementBinder',
-	        url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions'
+	        url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions',
+	        required : 'true'
 	    }, {
             name : 'columns',
             label : '@@auditTrailFormElement.columns@@',
             type : 'grid',
+            required : 'true',
             columns : [{
                 key : 'columnId',
                 label : '@@auditTrailFormElement.columns.id@@',
@@ -30,7 +32,7 @@
         },{
             name : 'sortBy',
             label : '@@auditTrailFormElement.sortBy@@',
-            description: '@@auditTrailFormElement.sortBy.desc@@',
+            description : '@@auditTrailFormElement.sortBy.desc@@',
             type : 'grid',
             columns : [
             	{

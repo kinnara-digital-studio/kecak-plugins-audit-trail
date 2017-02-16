@@ -27,16 +27,15 @@ $(document).ready(function(){
     <thead>
         <tr>
             <#list headers as header>
-            <th>${header}</th>
+            <th>${header!}</th>
             </#list>
         </tr>
     </thead>
     <tbody>
          <#list datas as data>
-        <tr>
-           
-                <#list data as content>
-                    <td>${content}</td>
+        <tr>           
+                <#list data! as content>
+                    <td>${content!}</td>
                 </#list>
         </tr>
         </#list>
@@ -47,7 +46,7 @@ $(document).ready(function(){
     <thead>
         <tr>
             <#list headers as header>
-            <th>${header}</th>
+            <th>${header!}</th>
             </#list>
         </tr>
     </thead>
