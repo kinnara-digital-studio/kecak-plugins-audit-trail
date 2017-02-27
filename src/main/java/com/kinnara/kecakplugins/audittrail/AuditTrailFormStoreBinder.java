@@ -1,13 +1,7 @@
 package com.kinnara.kecakplugins.audittrail;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.joget.apps.app.dao.FormDefinitionDao;
-import org.joget.apps.app.model.AppDefinition;
-import org.joget.apps.app.model.FormDefinition;
-import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.Element;
@@ -17,8 +11,6 @@ import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.workflow.model.WorkflowAssignment;
-import org.joget.workflow.model.service.WorkflowManager;
 
 /**
  * 
@@ -48,22 +40,18 @@ public class AuditTrailFormStoreBinder extends WorkflowFormBinder{
 	
 	@Override
 	public FormRowSet store(Element element, FormRowSet rows, FormData formData) {
-		AppService appService = (AppService)AppUtil.getApplicationContext().getBean("appService");
-		String processId = appService.getOriginProcessId(formData.getProcessId());
+		String primaryKeyValue = formData.getPrimaryKeyValue(); // use UUID
 		
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
-		if(auditForm != null && rows != null && rows.size() > 0 && processId != null) {
-			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
-			
-			String primaryKeyValue = null; // use UUID
-			
+		if(auditForm != null && rows != null && rows.size() > 0) {
+			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");			
 			final FormRow formRow = rows.get(0);
 			final FormData auditFormData = new FormData();
 			
 			auditFormData.setPrimaryKeyValue(primaryKeyValue);
 			formService.executeFormLoadBinders(auditForm, auditFormData);
 			
-			auditFormData.addRequestParameterValues(getPropertyString("fieldProcessId"), new String[] {processId});
+			auditFormData.addRequestParameterValues(getPropertyString("fieldProcessId"), new String[] {primaryKeyValue});
 			
 			getLeavesChildren(auditForm, new OnLeafChild() {	
 				public void onLeafChild(Element leaf) {
