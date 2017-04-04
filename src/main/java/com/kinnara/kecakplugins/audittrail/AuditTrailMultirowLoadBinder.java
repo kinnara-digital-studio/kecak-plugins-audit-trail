@@ -9,7 +9,6 @@ import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormLoadBinder;
 import org.joget.apps.form.model.FormLoadMultiRowElementBinder;
 import org.joget.apps.form.model.FormRowSet;
-import org.joget.commons.util.LogUtil;
 import org.springframework.context.ApplicationContext;
 
 public class AuditTrailMultirowLoadBinder extends FormBinder
@@ -29,15 +28,15 @@ implements FormLoadBinder,
 	}
 
 	public String getName() {
-		return "Audit Trail Form Load Binder";
+		return "Kecak Audit Trail Form Load Binder";
 	}
 
 	public String getVersion() {
-		return "1.0.0";
+		return getClass().getPackage().getImplementationVersion();
 	}
 
 	public String getDescription() {
-		return "Kecak audit trail form binder";
+		return "Artifact ID : kecak-plugins-audit-trail";
 	}
 
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {

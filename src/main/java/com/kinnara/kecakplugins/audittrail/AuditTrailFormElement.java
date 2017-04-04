@@ -82,15 +82,15 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     }
 
     public String getVersion() {
-        return "1.0.0";
+    	return getClass().getPackage().getImplementationVersion();
     }
 
     public String getDescription() {
-        return "Get list of approval history for each process";
+        return "Form table element, to get list of approval history for each process; Artifact ID : kecak-plugins-audit-trail";
     }
 
     public String getLabel() {
-        return "Audit Trail Form Element";
+        return "Kecak Audit Trail Form Element";
     }
 
     public String getClassName() {
