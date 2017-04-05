@@ -1,6 +1,6 @@
-# Welcome
+# Kecak Audit Trail Plugin
 
-Kecak Audit Trail Plugins bundle contains a set of plugins to support field-level audit trail history.
+Kecak Audit Trail Plugin bundle contains a set of plugins to support field-level audit trail history.
 
 # Plugins Components
 
