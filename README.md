@@ -22,7 +22,7 @@ There are 3 main steps to need to be configured when implementing the plugins
 
 ### Develop Audit Form
 
-**Audit Form** is the form which structure is needed to capture the audit history for fields in **Main Form**. You need to use the same field name with the one in **Main Form** in order to capture the data. The field type is not necessarily have to be the same. Add another field that can be use to store foreign key (**Main Form**'s id).
+**Audit Form** is the form which structure is needed to capture the audit history for fields in **Main Form**. You need to use the same field name with the one in **Main Form** in order to capture the data. The field type is not necessarily have to be the same. Add another field that can be used to store foreign key (**Main Form**'s id).
 
 ### Bind **Main Form** with **Audit Form**
 
