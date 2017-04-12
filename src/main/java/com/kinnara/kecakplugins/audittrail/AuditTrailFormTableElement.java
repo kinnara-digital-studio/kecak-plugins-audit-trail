@@ -17,7 +17,7 @@ import org.joget.apps.form.service.FormUtil;
  *
  * @author Yonathan
  */
-public class AuditTrailFormElement extends Element implements FormBuilderPaletteElement {
+public class AuditTrailFormTableElement extends Element implements FormBuilderPaletteElement {
     @Override
     public String renderTemplate(FormData formData, Map dataModel) {
     	FormUtil.setReadOnlyProperty(this);
@@ -90,7 +90,7 @@ public class AuditTrailFormElement extends Element implements FormBuilderPalette
     }
 
     public String getLabel() {
-        return "Kecak Audit Trail Form Element";
+        return "Kecak Audit Trail Form Table Element";
     }
 
     public String getClassName() {
