@@ -6,6 +6,7 @@
     <packaging>bundle</packaging>
     <name>kecak-plugins-audit-trail</name>
     <url>http://www.kinnarastudio.com</url>
+    <version>2.1.0</version>
     <build>
         <plugins>
             <plugin>
@@ -96,6 +97,11 @@
             <scope>provided</scope>
         </dependency>
         <!-- Change plugin specific dependencies here -->
+        <dependency>
+		    <groupId>javax.servlet</groupId>
+		    <artifactId>servlet-api</artifactId>
+		    <version>2.5</version>
+		</dependency>
         <!-- End change plugin specific dependencies here -->
     </dependencies>
     <distributionManagement>
@@ -108,5 +114,4 @@
             <url>http://dev.joget.org/archiva/repository/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-    <version>2.0.1</version>
 </project>
