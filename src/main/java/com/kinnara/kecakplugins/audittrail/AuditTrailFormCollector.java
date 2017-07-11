@@ -25,7 +25,7 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClassName(), "/properties/FormFieldAuditTrail.json", null, false, "/messages/FormFieldAuditTrail");
+		return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailFormCollector.json", null, false, "/messages/AuditTrailFormCollector");
 	}
 
 	public String getName() {
