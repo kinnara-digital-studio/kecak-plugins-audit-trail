@@ -33,7 +33,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getName() {
-		return "Kecak Audit Trail Form Binder";
+		return "Audit Trail Form Binder";
 	}
 	
 	@Override
@@ -60,7 +60,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 			getLeavesChildren(auditForm, new OnLeafChild() {
 				public void onLeafChild(Element element) {
 					String id = element.getPropertyString(FormUtil.PROPERTY_ID);
-					
+
 					if(row != null && row.containsKey(id) && !id.equals(foreignKeyField))
 						row.remove(id);
 				}
@@ -92,6 +92,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 				public void onLeafChild(Element leaf) {
 					String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
 					String value = formRow.getProperty(leafId);
+					LogUtil.info(getClassName(), "onLeafChild leafId [" +leafId+ "] value [" +value+ "]");
 					if(value != null && !value.isEmpty())
 						auditFormData.addRequestParameterValues(leafId, new String[] {value});
 				}
@@ -110,7 +111,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getDescription() {
-		return "Load or Store form data to audit trail table; Artifact ID : kecak-plugins-audit-trail";
+		return "Kecak Plugins; Artifact ID : " + getClass().getPackage().getImplementationTitle() + "; Load or Store form data to audit trail table";
 	}
 	
 	private void getLeavesChildren(Element element, OnLeafChild listener) {

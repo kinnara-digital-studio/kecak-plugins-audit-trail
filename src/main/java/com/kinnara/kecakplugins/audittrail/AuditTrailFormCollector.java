@@ -29,7 +29,7 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getName() {
-		return "Kecak Audit Trail Form Collector";
+		return "Audit Trail Form Collector";
 	}
 
 	public String getVersion() {
@@ -37,7 +37,7 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getDescription() {
-		return "Artifact ID : " + getClass().getPackage().getImplementationTitle();
+		return "Kecak Plugins; Artifact ID : " + getClass().getPackage().getImplementationTitle();
 	}
 
 	@Override

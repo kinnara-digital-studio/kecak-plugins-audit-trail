@@ -78,7 +78,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getName() {
-        return "Kecak Audit Trail Form Element";
+        return "Audit Trail Form Element";
     }
 
     public String getVersion() {
@@ -86,11 +86,11 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getDescription() {
-        return "Form table element, to get list of approval history for each process; Artifact ID : kecak-plugins-audit-trail";
+        return "Kecak Plugins; Form table element, to get list of approval history for each process; Artifact ID : " + getClass().getPackage().getImplementationTitle();
     }
 
     public String getLabel() {
-        return "Kecak Audit Trail Form Table Element";
+        return getName();
     }
 
     public String getClassName() {
@@ -102,7 +102,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getFormBuilderCategory() {
-        return "Kecak Enterprise";
+        return "Kecak Plugins";
     }
 
     public int getFormBuilderPosition() {
