@@ -102,7 +102,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getFormBuilderCategory() {
-        return "Kecak Plugins";
+        return "Kecak";
     }
 
     public int getFormBuilderPosition() {
