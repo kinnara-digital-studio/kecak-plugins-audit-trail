@@ -1,57 +1,93 @@
-[{
-        title: '@@auditTrailFormElement.title@@',
-        properties:[{
-            name : 'id',
-            label : '@@auditTrailFormElement.id@@',
-            type : 'textfield',
-            required : 'True',
-            regex_validation : '^[a-zA-Z0-9_]+$',
-            validation_message : '@@form.textfield.invalidId@@'
-        }, {
-	        name : 'loadBinder',
-	        label : '@@auditTrailFormElement.loadBinder@@',
-	        type : 'elementselect',
-	        value : '%s',
-	        options_ajax : '[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadMultiRowElementBinder',
-	        url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions',
-	        required : 'true'
-	    }, {
-            name : 'columns',
-            label : '@@auditTrailFormElement.columns@@',
-            type : 'grid',
-            required : 'true',
-            columns : [{
-                key : 'columnId',
-                label : '@@auditTrailFormElement.columns.id@@',
-                required : 'true'
-            },
-            {
-                key : 'columnLabel',
-                label : '@@auditTrailFormElement.columns.label@@'
-            }]
-        },{
-            name : 'sortBy',
-            label : '@@auditTrailFormElement.sortBy@@',
-            description : '@@auditTrailFormElement.sortBy.desc@@',
-            type : 'grid',
-            columns : [
-            	{
-            		key : 'index',
-            		label : '@@auditTrailFormElement.sortBy.index@@',
-            		required : 'true'
-            	}, {
-            		key : 'mode',
-            		label : '@@auditTrailFormElement.sortBy.mode@@',
-            		options : [
-            			{
-            				value : 'asc',
-            				label : 'ASC'
-            			}, {
-            				value : 'desc',
-            				label : 'DESC'
-            			}
-            		]
-            	}
-            ]
-        }]
-}]
+[
+  {
+    title: '@@auditTrailFormElement.title@@',
+    properties:[
+      {
+          name : 'id',
+          label : '@@auditTrailFormElement.id@@',
+          type : 'textfield',
+          required : 'True',
+          regex_validation : '^[a-zA-Z0-9_]+$',
+          validation_message : '@@form.textfield.invalidId@@'
+      }, {
+        name : 'label',
+        label : '@@auditTrailFormElement.label@@',
+        type : 'textfield'
+      }, {
+          name : 'loadBinder',
+          label : '@@auditTrailFormElement.loadBinder@@',
+          type : 'elementselect',
+          value : '%s',
+          options_ajax : '[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormLoadMultiRowElementBinder',
+          url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions',
+          required : 'true'
+      }, {
+          name : 'columns',
+          label : '@@auditTrailFormElement.columns@@',
+          type : 'grid',
+          required : 'true',
+          columns : [{
+              key : 'columnId',
+              label : '@@auditTrailFormElement.columns.id@@',
+              required : 'true'
+          },
+          {
+              key : 'columnLabel',
+              label : '@@auditTrailFormElement.columns.label@@'
+          }]
+      },{
+          name : 'sortBy',
+          label : '@@auditTrailFormElement.sortBy@@',
+          description : '@@auditTrailFormElement.sortBy.desc@@',
+          type : 'grid',
+          columns : [
+              {
+                  key : 'index',
+                  label : '@@auditTrailFormElement.sortBy.index@@',
+                  required : 'true'
+              }, {
+                  key : 'mode',
+                  label : '@@auditTrailFormElement.sortBy.mode@@',
+                  options : [
+                      {
+                          value : 'asc',
+                          label : 'ASC'
+                      }, {
+                          value : 'desc',
+                          label : 'DESC'
+                      }
+                  ]
+              }
+          ]
+      }
+    ]
+  }, {
+    title : '@@auditTrailFormElement.advance@@',
+    properties : [
+      {
+        name : 'hiddenWhenReadonly',
+        label : '@@auditTrailFormElement.hiddenWhenReadonly@@',
+        type : 'checkbox',
+        value : 'false',
+        options : [
+          {
+            value : 'true',
+            label : ''
+          }
+        ]
+      },
+      {
+        name : 'hiddenWhenAsSubform',
+        label : '@@auditTrailFormElement.hiddenWhenAsSubform@@',
+        type : 'checkbox',
+        value : 'false',
+        options : [
+          {
+            value : 'true',
+            label : ''
+          }
+        ]
+      }
+    ]
+  }
+]

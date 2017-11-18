@@ -1,18 +1,13 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import java.util.Collection;
-
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
-import org.joget.apps.form.model.Element;
-import org.joget.apps.form.model.Form;
-import org.joget.apps.form.model.FormBinder;
-import org.joget.apps.form.model.FormData;
-import org.joget.apps.form.model.FormRow;
-import org.joget.apps.form.model.FormRowSet;
+import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+
+import java.util.Collection;
 
 /**
  * 
@@ -92,7 +87,6 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 				public void onLeafChild(Element leaf) {
 					String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
 					String value = formRow.getProperty(leafId);
-					LogUtil.info(getClassName(), "onLeafChild leafId [" +leafId+ "] value [" +value+ "]");
 					if(value != null && !value.isEmpty())
 						auditFormData.addRequestParameterValues(leafId, new String[] {value});
 				}

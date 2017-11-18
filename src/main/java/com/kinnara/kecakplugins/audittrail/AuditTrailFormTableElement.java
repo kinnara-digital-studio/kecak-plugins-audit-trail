@@ -11,7 +11,9 @@ import org.joget.apps.form.model.FormBuilderPaletteElement;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
+import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 
 /**
  *
@@ -56,14 +58,19 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 	    	}
         }
         
-        
         Object[] sortBy = (Object[])getProperty("sortBy");  	
         if(sortBy != null && sortBy.length > 0) {
             dataModel.put("sort", translateSoryBy(sortBy));
         }
         
         dataModel.put("datas", datas);
-        dataModel.put("error", "false");
+        dataModel.put("error", false);
+        dataModel.put("hidden",
+                ("true".equals(getPropertyString("hiddenWhenReadonly"))
+                        && FormUtil.isReadonly(this, formData)) ||
+                ("true".equals(getPropertyString("hiddenWhenAsSubform"))
+                        && FormUtil.findRootForm(this) != null
+                        && FormUtil.findRootForm(this).getParent() != null) );
         
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
         return html;

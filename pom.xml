@@ -6,15 +6,15 @@
     <packaging>bundle</packaging>
     <name>kecak-plugins-audit-trail</name>
     <url>http://www.kinnarastudio.com</url>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
