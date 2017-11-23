@@ -2,13 +2,7 @@ package com.kinnara.kecakplugins.audittrail;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataDao;
-import org.joget.apps.form.model.Element;
-import org.joget.apps.form.model.Form;
-import org.joget.apps.form.model.FormBinder;
-import org.joget.apps.form.model.FormData;
-import org.joget.apps.form.model.FormLoadBinder;
-import org.joget.apps.form.model.FormLoadMultiRowElementBinder;
-import org.joget.apps.form.model.FormRowSet;
+import org.joget.apps.form.model.*;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
@@ -44,7 +38,7 @@ implements FormLoadBinder,
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {
 		ApplicationContext appContext = AppUtil.getApplicationContext();
 		WorkflowManager wfManager = (WorkflowManager)appContext.getBean("workflowManager");
-		WorkflowAssignment wfAssignment = (WorkflowAssignment) wfManager.getAssignment(formData.getActivityId());
+		WorkflowAssignment wfAssignment = wfManager.getAssignment(formData.getActivityId());
 		FormDataDao formDataDao = (FormDataDao) appContext.getBean("formDataDao");
         Form form = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 

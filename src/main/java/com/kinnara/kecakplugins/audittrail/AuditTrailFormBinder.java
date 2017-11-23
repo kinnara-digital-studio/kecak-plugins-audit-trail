@@ -6,6 +6,9 @@ import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.workflow.model.WorkflowAssignment;
+import org.joget.workflow.model.service.WorkflowManager;
+import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 
@@ -52,14 +55,12 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 			final String foreignKeyField = getPropertyString("foreignKeyField");
 			
 			Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
-			getLeavesChildren(auditForm, new OnLeafChild() {
-				public void onLeafChild(Element element) {
-					String id = element.getPropertyString(FormUtil.PROPERTY_ID);
+			getLeavesChildren(auditForm, element1 -> {
+                String id = element1.getPropertyString(FormUtil.PROPERTY_ID);
 
-					if(row != null && row.containsKey(id) && !id.equals(foreignKeyField))
-						row.remove(id);
-				}
-			});
+                if(row != null && row.containsKey(id) && !id.equals(foreignKeyField))
+                    row.remove(id);
+            });
 		}
 		
 		return originalRowSet;
@@ -72,25 +73,28 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	 */
 	@Override
 	public FormRowSet store(Element element, FormRowSet rows, FormData formData) {
+		ApplicationContext appContext = AppUtil.getApplicationContext();
+		WorkflowManager wfManager = (WorkflowManager)appContext.getBean("workflowManager");
+		WorkflowAssignment wfAssignment = wfManager.getAssignment(formData.getActivityId());
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
+
 		if(auditForm != null && rows != null && rows.size() > 0) {
 			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");			
 			final FormRow formRow = rows.get(0);
 			final FormData auditFormData = new FormData();
-			
-			auditFormData.setPrimaryKeyValue(null); // use UUID
-			formService.executeFormLoadBinders(auditForm, auditFormData);
+
+			LogUtil.info(getClassName(), "formData activityId [" +formData.getActivityId()+"]");
+//			LogUtil.info(getClassName(), "wfAssignment activityId [" + wfAssignment == null ? null : wfAssignment.getActivityId()+"]");
+			auditFormData.setPrimaryKeyValue(wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue());
 			
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
 			
-			getLeavesChildren(auditForm, new OnLeafChild() {	
-				public void onLeafChild(Element leaf) {
-					String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
-					String value = formRow.getProperty(leafId);
-					if(value != null && !value.isEmpty())
-						auditFormData.addRequestParameterValues(leafId, new String[] {value});
-				}
-			});
+			getLeavesChildren(auditForm, leaf -> {
+                String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
+                String value = formRow.getProperty(leafId);
+                if(value != null && !value.isEmpty())
+                    auditFormData.addRequestParameterValues(leafId, new String[] {value});
+            });
 			
 			formService.executeFormStoreBinders(auditForm, auditFormData);
 		} else if(auditForm == null){
