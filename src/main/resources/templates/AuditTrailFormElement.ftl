@@ -1,10 +1,7 @@
-<div class="form-cell" ${elementMetaData!}>
-
 <#if !hidden >
-    <label class="label" style="margin-bottom: 13px;">${element.properties.label!?html}</label>
+    <div class="form-cell" ${elementMetaData!}>
+        <label class="label" style="margin-bottom: 13px;">${element.properties.label!?html}</label>
 
-    <!-- ${className} -->
-    <#if !(request.getAttribute(className)??) >
         <link rel="stylesheet" type="text/css" href="${request.contextPath}/plugin/${className}/css/jquery.dataTables.min.css">
         <script type="text/javascript" src="${request.contextPath}/plugin/${className}/js/jquery.dataTables.min.js"></script>
         <script type="text/javascript">
@@ -49,16 +46,5 @@
                 </#list>
             </tbody>
         </table>
-    <#else>
-        <table id="${elementParamName!}${element.properties.elementUniqueKey!}">
-            <thead>
-                <tr>
-                    <#list headers as header>
-                        <th>${header!}</th>
-                    </#list>
-                </tr>
-            </thead>
-        </table>
-    </#if>
-  </#if>
-</div>
+    </div>
+</#if>
