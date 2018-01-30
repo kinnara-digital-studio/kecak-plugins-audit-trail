@@ -2,6 +2,7 @@ package com.kinnara.kecakplugins.audittrail;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.service.AppUtil;
@@ -57,12 +58,10 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 			
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), requestParams.get("_FORM_META_ORIGINAL_ID"));
 			
-			getLeavesChildren(auditForm, new OnLeafChild() {	
-				public void onLeafChild(Element leaf) {
+			getLeavesChildren(auditForm, leaf -> {
 					String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
 					if(requestParams.containsKey(leafId))
 						auditFormData.addRequestParameterValues(leafId, requestParams.get(leafId));
-				}
 			});
 			
 			formService.executeFormStoreBinders(auditForm, auditFormData);
@@ -80,18 +79,14 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
                 || auditTrail.getMethod().equals("assignmentReassign");
     }
 
-	private void getLeavesChildren(Element element, OnLeafChild listener) {
+	private void getLeavesChildren(Element element, Consumer<Element> listener) {
 		Collection<Element> children = element.getChildren(); 
 		if(children == null  || children.isEmpty()) {
-			listener.onLeafChild(element);
+			listener.accept(element);
 		} else {
 			for(Element child : children) {
 				getLeavesChildren(child, listener);
 			}
 		}
-	}
-	
-	private interface OnLeafChild {
-		void onLeafChild(Element element);
 	}
 }
