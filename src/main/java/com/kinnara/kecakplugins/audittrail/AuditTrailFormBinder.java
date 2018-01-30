@@ -11,6 +11,7 @@ import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * 
@@ -79,19 +80,16 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
-			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");			
-			final FormRow formRow = rows.get(0);
+			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
 			final FormData auditFormData = new FormData();
 
-			LogUtil.info(getClassName(), "formData activityId [" +formData.getActivityId()+"]");
-//			LogUtil.info(getClassName(), "wfAssignment activityId [" + wfAssignment == null ? null : wfAssignment.getActivityId()+"]");
 			auditFormData.setPrimaryKeyValue(wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue());
 			
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
 			
 			getLeavesChildren(auditForm, leaf -> {
                 String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
-                String value = formRow.getProperty(leafId);
+                String value = rows.get(0).getProperty(leafId);
                 if(value != null && !value.isEmpty())
                     auditFormData.addRequestParameterValues(leafId, new String[] {value});
             });
@@ -112,18 +110,14 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 		return "Kecak Plugins; Artifact ID : " + getClass().getPackage().getImplementationTitle() + "; Load or Store form data to audit trail table";
 	}
 	
-	private void getLeavesChildren(Element element, OnLeafChild listener) {
+	private void getLeavesChildren(Element element, Consumer<Element> consumer) {
 		Collection<Element> children = element.getChildren(); 
 		if(children == null  || children.isEmpty()) {
-			listener.onLeafChild(element);
+			consumer.accept(element);
 		} else {
 			for(Element child : children) {
-				getLeavesChildren(child, listener);
+				getLeavesChildren(child, consumer);
 			}
 		}
-	}
-	
-	private interface OnLeafChild {
-		void onLeafChild(Element element);
 	}
 }
