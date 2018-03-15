@@ -19,6 +19,50 @@
 				label : '@@auditTrailMultirowLoadBinder.sqlFilterCondition@@',
 				type : 'codeeditor',
 				mode : 'sql'
+			}, {
+				name : 'pendingActivity',
+				label : '@@auditTrailMultirowLoadBinder.pendingActivity@@',
+				type : 'checkbox',
+				default : '',
+				options : [
+					{
+						value : 'true',
+						label : ''
+					}
+				]
+			}, {
+				name : 'pendingActivityValues',
+				label : '@@auditTrailMultirowLoadBinder.pendingActivityValues@@',
+				type : 'grid',
+				columns : [
+					{
+						key : 'field',
+						label : '@@auditTrailMultirowLoadBinder.pendingActivityValues.field@@',
+						required : 'true'
+					},
+					{
+						key : 'type',
+						label : '@@auditTrailMultirowLoadBinder.pendingActivityValues.type@@',
+						options : [
+							{
+								value : 'text',
+								label : 'Text'
+							},
+							{
+								value : 'pendingUser',
+								label : 'Pending User'
+							},
+							{
+								value : 'pendingActivity',
+								label : 'Pending Activity'
+							}
+						]
+					},
+					{
+						key : 'value',
+						label : '@@auditTrailMultirowLoadBinder.pendingActivityValues.value@@'
+					}
+				]
 			}
 		]
 	}

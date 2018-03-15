@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.joget.apps.app.model.AuditTrail;
+import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
 import org.joget.apps.form.model.Form;
@@ -30,7 +31,7 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getName() {
-		return "Audit Trail Form Collector";
+		return AppPluginUtil.getMessage("formFieldAuditTrail.title", getClassName(), "/messages/AuditTrailFormCollector");
 	}
 
 	public String getVersion() {

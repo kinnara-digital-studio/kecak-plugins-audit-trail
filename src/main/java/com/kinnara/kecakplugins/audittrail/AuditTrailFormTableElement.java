@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
 import org.joget.apps.form.model.FormBuilderPaletteElement;
@@ -85,7 +86,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getName() {
-        return "Audit Trail Form Element";
+        return AppPluginUtil.getMessage("auditTrailFormElement.title", getClassName(), "/messages/AuditTrailFormElement");
     }
 
     public String getVersion() {

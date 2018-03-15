@@ -1,5 +1,6 @@
 package com.kinnara.kecakplugins.audittrail;
 
+import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.*;
@@ -32,7 +33,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getName() {
-		return "Audit Trail Form Binder";
+		return AppPluginUtil.getMessage("auditTrailFormBinder.title", getClassName(), "/messages/AuditTrailFormBinder");
 	}
 	
 	@Override
