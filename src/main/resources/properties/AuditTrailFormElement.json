@@ -35,30 +35,6 @@
               key : 'columnLabel',
               label : '@@auditTrailFormElement.columns.label@@'
           }]
-      },{
-          name : 'sortBy',
-          label : '@@auditTrailFormElement.sortBy@@',
-          description : '@@auditTrailFormElement.sortBy.desc@@',
-          type : 'grid',
-          columns : [
-              {
-                  key : 'index',
-                  label : '@@auditTrailFormElement.sortBy.index@@',
-                  required : 'true'
-              }, {
-                  key : 'mode',
-                  label : '@@auditTrailFormElement.sortBy.mode@@',
-                  options : [
-                      {
-                          value : 'asc',
-                          label : 'ASC'
-                      }, {
-                          value : 'desc',
-                          label : 'DESC'
-                      }
-                  ]
-              }
-          ]
       }
     ]
   }, {

@@ -34,6 +34,8 @@
 				name : 'pendingActivityValues',
 				label : '@@auditTrailMultirowLoadBinder.pendingActivityValues@@',
 				type : 'grid',
+				control_field: 'pendingActivity',
+				control_value: 'true',
 				columns : [
 					{
 						key : 'field',

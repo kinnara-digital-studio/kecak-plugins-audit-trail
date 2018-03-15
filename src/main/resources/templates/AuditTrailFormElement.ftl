@@ -8,17 +8,8 @@
         $(document).ready(function(){
             try {
                 $('table#${elementParamName!}${element.properties.elementUniqueKey!}').DataTable({
-                    "pagingType": "full_numbers"
-                    <#if sort?? >
-                        ,"order": [
-                            <#assign first = true>
-                            <#list sort as sortItem>
-                                <#if !first>, </#if>
-                                [ ${sortItem['index']!}, "${sortItem['mode']!}" ]
-                                <#assign first = false>
-                            </#list>
-                        ]
-                    </#if>
+                    "pagingType": "full_numbers",
+                    "ordering" : false
                 });
             } catch (err) {
                 // do nothing

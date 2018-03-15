@@ -56,41 +56,46 @@ implements FormLoadBinder,
 		FormDataDao formDataDao = (FormDataDao) appContext.getBean("formDataDao");
         Form form = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
-        if(form != null) {
-        	String sqlFilterCondition = getPropertyString("sqlFilterCondition");
-
-        	FormRowSet rowSet =
-					formDataDao.find(form, "WHERE e.customProperties." + getPropertyString("fieldProcessId") + "=?" +
-							(sqlFilterCondition != null && !sqlFilterCondition.isEmpty() ?
-									(" AND ( " + AppUtil.processHashVariable(sqlFilterCondition, wfAssignment, null, null) + " )") : ""),
-        			new Object[] { primaryKey }, null, null, null, null);
-
-        	if("true".equalsIgnoreCase(getPropertyString("pendingActivity"))) {
-				final FormRow row = new FormRow();
-
-				Map<String, Object>[] pendingActivityValues = (Map<String, Object>[]) getProperty("pendingActivityValues");
-				Arrays.stream(pendingActivityValues)
-					.forEach(cols -> {
-						String field = cols.get("field").toString();
-						String type = cols.get("type").toString();
-						String value = cols.get("value").toString();
-						switch (type) {
-							case "pendingUser":
-								row.setProperty(field, readPendingUser(formData.getProcessId()));
-								break;
-							case "pendingActivity":
-								row.setProperty(field, readPendingActivity(formData.getProcessId()));
-								break;
-							default:
-								row.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
-						}
-					});
-
-				rowSet.add(0, row);
-			}
-        	return rowSet;
+        if(form == null) {
+            LogUtil.warn(getClassName(), "Form ["+getPropertyString("formDefId")+"] cannot be defined");
+            return null;
         }
-		return null;
+
+        String sqlFilterCondition = getPropertyString("sqlFilterCondition");
+
+        FormRowSet rowSet =
+                formDataDao.find(form, "WHERE e.customProperties." + getPropertyString("fieldProcessId") + "=?" +
+                        (sqlFilterCondition != null && !sqlFilterCondition.isEmpty() ?
+                                (" AND ( " + AppUtil.processHashVariable(sqlFilterCondition, wfAssignment, null, null) + " )") : ""),
+                new Object[] { primaryKey }, "dateCreated", true, null, null);
+
+        LogUtil.info(getClassName(), "Pending Activity ["+getPropertyString("pendingActivity")+"]");
+        if("true".equalsIgnoreCase(getPropertyString("pendingActivity"))) {
+            final FormRow row = new FormRow();
+
+            Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
+            Arrays.stream(pendingActivityValues)
+                    .map(cols -> (Map<String, Object>)cols)
+                    .forEach(cols -> {
+                        String field = cols.get("field").toString();
+                        String type = cols.get("type").toString();
+                        String value = cols.get("value").toString();
+                        LogUtil.info(getClassName(), "Pending ["+field+"] ["+type+"] ["+value+"]");
+                        switch (type) {
+                            case "pendingUser":
+                                row.setProperty(field, readPendingUser(formData.getProcessId()));
+                                break;
+                            case "pendingActivity":
+                                row.setProperty(field, readPendingActivity(formData.getProcessId()));
+                                break;
+                            default:
+                                row.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
+                        }
+                    });
+
+            rowSet.add(0, row);
+        }
+        return rowSet;
 	}
 
 	private String readPendingUser(String processId) {
