@@ -10,16 +10,13 @@ import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
-import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class AuditTrailMultirowLoadBinder extends FormBinder
 implements FormLoadBinder,
@@ -69,7 +66,6 @@ implements FormLoadBinder,
                                 (" AND ( " + AppUtil.processHashVariable(sqlFilterCondition, wfAssignment, null, null) + " )") : ""),
                 new Object[] { primaryKey }, "dateCreated", true, null, null);
 
-        LogUtil.info(getClassName(), "Pending Activity ["+getPropertyString("pendingActivity")+"]");
         if("true".equalsIgnoreCase(getPropertyString("pendingActivity"))) {
             final FormRow row = new FormRow();
 
@@ -80,7 +76,6 @@ implements FormLoadBinder,
                         String field = cols.get("field").toString();
                         String type = cols.get("type").toString();
                         String value = cols.get("value").toString();
-                        LogUtil.info(getClassName(), "Pending ["+field+"] ["+type+"] ["+value+"]");
                         switch (type) {
                             case "pendingUser":
                                 row.setProperty(field, readPendingUser(formData.getProcessId()));
