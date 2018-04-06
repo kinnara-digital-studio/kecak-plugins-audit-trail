@@ -1,9 +1,11 @@
 package com.kinnara.kecakplugins.audittrail;
 
 import org.joget.apps.app.service.AppPluginUtil;
+import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.*;
+import org.joget.apps.form.service.FileUtil;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
@@ -82,20 +84,25 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
 			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
+			AppService appService = (AppService) AppUtil.getApplicationContext().getBean("appService");
 			final FormData auditFormData = new FormData();
 
 			auditFormData.setPrimaryKeyValue(wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue());
-			
+
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
-			
+
 			getLeavesChildren(auditForm, leaf -> {
                 String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
                 String value = rows.get(0).getProperty(leafId);
                 if(value != null && !value.isEmpty())
                     auditFormData.addRequestParameterValues(leafId, new String[] {value});
             });
-			
 			formService.executeFormStoreBinders(auditForm, auditFormData);
+			String prevId = rows.get(0).getId();
+			rows.get(0).setId(auditFormData.getPrimaryKeyValue());
+			FileUtil.checkAndUpdateFileName(rows, auditForm, auditFormData.getPrimaryKeyValue());
+			FileUtil.storeFileFromFormRowSet(rows, auditForm, auditFormData.getPrimaryKeyValue());
+			rows.get(0).setId(prevId);
 		} else if(auditForm == null){
 			LogUtil.warn(getClassName(), "Form [" + getPropertyString("formDefId") + "] cannot be generated");
 		}
