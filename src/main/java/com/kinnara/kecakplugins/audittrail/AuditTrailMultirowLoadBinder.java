@@ -2,6 +2,7 @@ package com.kinnara.kecakplugins.audittrail;
 
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.service.AppPluginUtil;
+import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataDao;
 import org.joget.apps.form.model.*;
@@ -10,6 +11,7 @@ import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
+import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
 
@@ -48,8 +50,9 @@ implements FormLoadBinder,
 
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {
 		ApplicationContext appContext = AppUtil.getApplicationContext();
-		WorkflowManager wfManager = (WorkflowManager)appContext.getBean("workflowManager");
-		WorkflowAssignment wfAssignment = wfManager.getAssignment(formData.getActivityId());
+		AppService appService = (AppService) appContext.getBean("appService");
+		WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
+		WorkflowAssignment wfAssignment = workflowManager.getAssignment(formData.getActivityId());
 		FormDataDao formDataDao = (FormDataDao) appContext.getBean("formDataDao");
         Form form = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
@@ -66,29 +69,31 @@ implements FormLoadBinder,
                                 (" AND ( " + AppUtil.processHashVariable(sqlFilterCondition, wfAssignment, null, null) + " )") : ""),
                 new Object[] { primaryKey }, "dateCreated", true, null, null);
 
-        if("true".equalsIgnoreCase(getPropertyString("pendingActivity"))) {
+		String originProcessId = appService.getOriginProcessId(primaryKey);
+		WorkflowProcess workflowProcess = workflowManager.getRunningProcessById(originProcessId);
+
+        if("true".equalsIgnoreCase(getPropertyString("pendingActivity")) && workflowProcess.getState().equals("open.running")) {
             final FormRow row = new FormRow();
+			Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
+			Arrays.stream(pendingActivityValues)
+					.map(cols -> (Map<String, Object>) cols)
+					.forEach(cols -> {
+						String field = cols.get("field").toString();
+						String type = cols.get("type").toString();
+						String value = cols.get("value").toString();
+						switch (type) {
+							case "pendingUser":
+								row.setProperty(field, readPendingUser(workflowProcess.getInstanceId()));
+								break;
+							case "pendingActivity":
+								row.setProperty(field, readPendingActivity(workflowProcess.getInstanceId()));
+								break;
+							default:
+								row.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
+						}
+					});
 
-            Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
-            Arrays.stream(pendingActivityValues)
-                    .map(cols -> (Map<String, Object>)cols)
-                    .forEach(cols -> {
-                        String field = cols.get("field").toString();
-                        String type = cols.get("type").toString();
-                        String value = cols.get("value").toString();
-                        switch (type) {
-                            case "pendingUser":
-                                row.setProperty(field, readPendingUser(formData.getProcessId()));
-                                break;
-                            case "pendingActivity":
-                                row.setProperty(field, readPendingActivity(formData.getProcessId()));
-                                break;
-                            default:
-                                row.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
-                        }
-                    });
-
-            rowSet.add(0, row);
+			rowSet.add(0, row);
         }
         return rowSet;
 	}
