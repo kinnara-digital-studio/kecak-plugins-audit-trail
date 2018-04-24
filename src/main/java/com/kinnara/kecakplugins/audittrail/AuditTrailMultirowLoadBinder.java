@@ -72,7 +72,7 @@ implements FormLoadBinder,
 		String originProcessId = appService.getOriginProcessId(primaryKey);
 		WorkflowProcess workflowProcess = workflowManager.getRunningProcessById(originProcessId);
 
-        if("true".equalsIgnoreCase(getPropertyString("pendingActivity")) && workflowProcess.getState().equals("open.running")) {
+        if("true".equalsIgnoreCase(getPropertyString("pendingActivity")) && workflowProcess.getState().equals(SharkConstants.STATE_OPEN_RUNNING)) {
             final FormRow row = new FormRow();
 			Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
 			Arrays.stream(pendingActivityValues)
