@@ -84,13 +84,13 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
 			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
-			AppService appService = (AppService) AppUtil.getApplicationContext().getBean("appService");
 			final FormData auditFormData = new FormData();
 
 			auditFormData.setPrimaryKeyValue(wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue());
 
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
 
+			getLeavesChildren(element, l -> LogUtil.info(getClassName(), "Leaf ID ["+l.getPropertyString("id")+"]"));
 			getLeavesChildren(auditForm, leaf -> {
                 String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
                 String value = rows.get(0).getProperty(leafId);
