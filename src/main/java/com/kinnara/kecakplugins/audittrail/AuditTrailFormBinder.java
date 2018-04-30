@@ -90,12 +90,11 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 
 			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
 
-			getLeavesChildren(element, l -> LogUtil.info(getClassName(), "Leaf ID ["+l.getPropertyString("id")+"]"));
 			getLeavesChildren(auditForm, leaf -> {
                 String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
                 String value = rows.get(0).getProperty(leafId);
                 if(value != null && !value.isEmpty())
-                    auditFormData.addRequestParameterValues(leafId, new String[] {value});
+                    auditFormData.addRequestParameterValues(leafId, new String[] { AppUtil.processHashVariable(value, wfAssignment, null, null).replaceAll("#[a-zA-Z0-9._{}]+#", "")});
             });
 			formService.executeFormStoreBinders(auditForm, auditFormData);
 			String prevId = rows.get(0).getId();
