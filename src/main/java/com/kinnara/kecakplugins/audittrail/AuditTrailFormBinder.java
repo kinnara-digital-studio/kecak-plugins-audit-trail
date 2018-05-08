@@ -83,25 +83,32 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
-			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
-			final FormData auditFormData = new FormData();
+			String primaryKeyValue = wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue();
+			AppService appService = (AppService) FormUtil.getApplicationContext().getBean("appService");
+			rows.forEach(r -> r.setProperty(getPropertyString("foreignKeyField"), formData.getPrimaryKeyValue()));
+			appService.storeFormData(auditForm, rows, primaryKeyValue);
 
-			auditFormData.setPrimaryKeyValue(wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue());
-
-			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
-
-			getLeavesChildren(auditForm, leaf -> {
-                String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
-                String value = rows.get(0).getProperty(leafId);
-                if(value != null && !value.isEmpty())
-                    auditFormData.addRequestParameterValues(leafId, new String[] { AppUtil.processHashVariable(value, wfAssignment, null, null).replaceAll("#[a-zA-Z0-9._{}]+#", "")});
-            });
-			formService.executeFormStoreBinders(auditForm, auditFormData);
-			String prevId = rows.get(0).getId();
-			rows.get(0).setId(auditFormData.getPrimaryKeyValue());
-			FileUtil.checkAndUpdateFileName(rows, auditForm, auditFormData.getPrimaryKeyValue());
-			FileUtil.storeFileFromFormRowSet(rows, auditForm, auditFormData.getPrimaryKeyValue());
-			rows.get(0).setId(prevId);
+//			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
+//			final FormData auditFormData = new FormData();
+//
+//			auditFormData.setPrimaryKeyValue(primaryKeyValue);
+//
+//			auditFormData.addRequestParameterValues(getPropertyString("foreignKeyField"), new String[] {formData.getPrimaryKeyValue()});
+//
+//			getLeavesChildren(auditForm, leaf -> {
+//                String leafId = leaf.getPropertyString(FormUtil.PROPERTY_ID);
+//                String value = rows.get(0).getProperty(leafId);
+//                if(value != null && !value.isEmpty()) {
+//                	LogUtil.info(getClassName(), "leafId ["+leafId+"] ["+AppUtil.processHashVariable(value, wfAssignment, null, null).replaceAll("#[a-zA-Z0-9._{}]+#", "")+"]");
+//					auditFormData.addRequestParameterValues(leafId, new String[]{AppUtil.processHashVariable(value, wfAssignment, null, null).replaceAll("#[a-zA-Z0-9._{}]+#", "")});
+//				}
+//            });
+//			formService.executeFormStoreBinders(auditForm, auditFormData);
+//			String prevId = rows.get(0).getId();
+//			rows.get(0).setId(auditFormData.getPrimaryKeyValue());
+//			FileUtil.checkAndUpdateFileName(rows, auditForm, auditFormData.getPrimaryKeyValue());
+//			FileUtil.storeFileFromFormRowSet(rows, auditForm, auditFormData.getPrimaryKeyValue());
+//			rows.get(0).setId(prevId);
 		} else if(auditForm == null){
 			LogUtil.warn(getClassName(), "Form [" + getPropertyString("formDefId") + "] cannot be generated");
 		}
