@@ -1,5 +1,6 @@
 package com.kinnara.kecakplugins.audittrail;
 
+import org.apache.commons.collections.HashBag;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppService;
@@ -50,7 +51,6 @@ implements FormLoadBinder,
 
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {
 		ApplicationContext appContext = AppUtil.getApplicationContext();
-		AppService appService = (AppService) appContext.getBean("appService");
 		WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
 		WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
 		WorkflowAssignment wfAssignment = workflowManager.getAssignment(formData.getActivityId());
@@ -74,31 +74,33 @@ implements FormLoadBinder,
 			workflowProcessLinkDao.getLinks(primaryKey).stream()
 					.map(l -> workflowManager.getRunningProcessById(l.getProcessId()))
 					.filter(p -> p.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
+
 					.max(Comparator.comparing(WorkflowProcess::getInstanceId))
-					.ifPresent(p -> {
-						final FormRow row = new FormRow();
+					.map(p -> {
 						Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
-						Arrays.stream(pendingActivityValues)
+						return Arrays.stream(pendingActivityValues)
 								.map(cols -> (Map<String, Object>) cols)
-								.forEach(cols -> {
+								.collect(FormRow::new, (r, cols) -> {
 									String field = cols.get("field").toString();
 									String type = cols.get("type").toString();
 									String value = cols.get("value").toString();
+
+									r.setId(readPendingActivityId(p.getInstanceId()));
+									r.setProperty(getPropertyString("fieldProcessId"), primaryKey);
+
 									switch (type) {
 										case "pendingUser":
-											row.setProperty(field, readPendingUser(p.getInstanceId()));
+											r.setProperty(field, readPendingUser(p.getInstanceId()));
 											break;
 										case "pendingActivity":
-											row.setProperty(field, readPendingActivity(p.getInstanceId()));
+											r.setProperty(field, readPendingActivity(p.getInstanceId()));
 											break;
 										default:
-											row.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
+											r.setProperty(field, AppUtil.processHashVariable(value, wfAssignment, null, null));
 									}
-								});
-
-						rowSet.add(0, row);
-					});
-        }
+								}, FormRow::putAll);
+					}).ifPresent(row -> rowSet.add(0, row));
+		}
         return rowSet;
 	}
 
@@ -129,6 +131,15 @@ implements FormLoadBinder,
 		return activities.stream()
 				.filter(activity -> activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
 				.map(WorkflowActivity::getName)
+				.collect(Collectors.joining(","));
+	}
+
+	private String readPendingActivityId(String processId) {
+		WorkflowManager wfManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+		Collection<WorkflowActivity> activities = wfManager.getActivityList(processId, 0, 1, "dateCreated", true);
+		return activities.stream()
+				.filter(activity -> activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
+				.map(WorkflowActivity::getId)
 				.collect(Collectors.joining(","));
 	}
 }
