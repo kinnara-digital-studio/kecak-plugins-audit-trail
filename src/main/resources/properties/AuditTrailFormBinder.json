@@ -14,6 +14,17 @@
 				type : 'textfield',
 				required : 'true',
 				description : '@@auditTrailFormBinder.foreignKeyField.description@@'
+			}, {
+				name : 'doNotStoreValue',
+				label : '@@auditTrailFormBinder.doNotStoreValue@@',
+				type : 'checkbox',
+				value : '',
+				options : [
+					{
+						value : 'true',
+						label : ''
+					}
+				]
 			}
 		]
 	}

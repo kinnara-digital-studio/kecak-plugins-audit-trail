@@ -12,8 +12,10 @@ import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
+import sun.rmi.runtime.Log;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -83,10 +85,25 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
-			String primaryKeyValue = wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getPrimaryKeyValue();
+			String primaryKeyValue = wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getProcessId();
 			AppService appService = (AppService) FormUtil.getApplicationContext().getBean("appService");
-			rows.forEach(r -> r.setProperty(getPropertyString("foreignKeyField"), formData.getPrimaryKeyValue()));
-			appService.storeFormData(auditForm, rows, primaryKeyValue);
+
+			if(primaryKeyValue == null) {
+			    // if primaryKeyValue is null, system will automatically generate UUID as primary key
+			    LogUtil.info(getClassName(), "NULL primary key for audit row, use UUID as primary key");
+            }
+
+			// clone rows into auditRows
+			FormRowSet auditRows = rows.stream().collect(FormRowSet::new, (resultRowSet, sourceRow) -> {
+                FormRow auditRow = sourceRow.entrySet()
+                        .stream()
+                        .collect(FormRow::new, (resultRow, sourceEntry) -> resultRow.put(sourceEntry.getKey(), sourceEntry.getValue()), FormRow::putAll);
+                auditRow.setProperty(getPropertyString("foreignKeyField"), formData.getPrimaryKeyValue());
+                resultRowSet.add(auditRow);
+            }, FormRowSet::addAll);
+
+			// store auditRows into auditForm
+			appService.storeFormData(auditForm, auditRows, primaryKeyValue);
 
 //			FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
 //			final FormData auditFormData = new FormData();
@@ -113,10 +130,13 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 			LogUtil.warn(getClassName(), "Form [" + getPropertyString("formDefId") + "] cannot be generated");
 		}
 		
-		if(element.getProperties().containsKey(FormBinder.FORM_STORE_BINDER))
-			element.getProperties().remove(FormBinder.FORM_STORE_BINDER);
-		
-		return super.store(element, rows, formData);
+//		if(element.getProperties().containsKey(FormBinder.FORM_STORE_BINDER))
+//			element.getProperties().remove(FormBinder.FORM_STORE_BINDER);
+
+        if("true".equalsIgnoreCase(getPropertyString("doNotStoreValue")))
+            return rows;
+		else
+            return super.store(element, rows, formData);
 	}
 	
 	@Override
