@@ -5,17 +5,12 @@ import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.*;
-import org.joget.apps.form.service.FileUtil;
-import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
-import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
-import sun.rmi.runtime.Log;
 
 import java.util.Collection;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -81,11 +76,10 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	public FormRowSet store(Element element, FormRowSet rows, FormData formData) {
 		ApplicationContext appContext = AppUtil.getApplicationContext();
 		WorkflowManager wfManager = (WorkflowManager)appContext.getBean("workflowManager");
-		WorkflowAssignment wfAssignment = wfManager.getAssignment(formData.getActivityId());
 		Form auditForm = AuditTrailUtil.generateForm(getPropertyString("formDefId"));
 
 		if(auditForm != null && rows != null && rows.size() > 0) {
-			String primaryKeyValue = wfAssignment != null && wfAssignment.getActivityId() != null ? wfAssignment.getActivityId() : formData.getProcessId();
+			String primaryKeyValue = formData == null ? null : formData.getActivityId() == null ? formData.getProcessId() : formData.getActivityId();
 			AppService appService = (AppService) FormUtil.getApplicationContext().getBean("appService");
 
 			if(primaryKeyValue == null) {

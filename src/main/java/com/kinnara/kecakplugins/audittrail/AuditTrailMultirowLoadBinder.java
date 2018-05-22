@@ -50,6 +50,11 @@ implements FormLoadBinder,
 	}
 
 	public FormRowSet load(Element element, String primaryKey, FormData formData) {
+		// do not load data for empty primary key
+		if(primaryKey == null || primaryKey.isEmpty()) {
+			return null;
+		}
+
 		ApplicationContext appContext = AppUtil.getApplicationContext();
 		WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
 		WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
