@@ -22,18 +22,40 @@
           url : '[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions',
           required : 'true'
       }, {
-          name : 'columns',
-          label : '@@auditTrailFormElement.columns@@',
-          type : 'grid',
+        name : 'columns',
+        label : '@@auditTrailFormElement.columns@@',
+        type : 'grid',
+        required : 'true',
+        control_field : 'loadBinder',
+        control_value : '^((?!%s).)*$',
+        control_use_regex: 'true',
+        columns : [{
+            key : 'columnId',
+            label : '@@auditTrailFormElement.columns.id@@',
+            required : 'true'
+        },
+        {
+          key : 'columnLabel',
+          label : '@@auditTrailFormElement.columns.label@@',
+          required : 'true'
+        }]
+      }, {
+        name : 'monitoringColumns',
+        label : '@@auditTrailFormElement.columns@@',
+        type : 'grid',
+        required : 'true',
+        control_field : 'loadBinder',
+        control_value : '%s',
+        columns : [{
+          key : 'columnId',
+          label : '@@auditTrailFormElement.columns.id@@',
           required : 'true',
-          columns : [{
-              key : 'columnId',
-              label : '@@auditTrailFormElement.columns.id@@',
-              required : 'true'
-          },
+          options : %s
+        },
           {
-              key : 'columnLabel',
-              label : '@@auditTrailFormElement.columns.label@@'
+            key : 'columnLabel',
+            label : '@@auditTrailFormElement.columns.label@@',
+            required : 'true'
           }]
       }
     ]

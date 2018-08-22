@@ -1,9 +1,7 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
@@ -15,6 +13,12 @@ import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.workflow.model.WorkflowVariable;
+import org.joget.workflow.model.service.WorkflowManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import sun.jvm.hotspot.utilities.AddressOps;
 
 /**
  *
@@ -30,14 +34,22 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         dataModel.put("className", getClassName());
         
         // Data tables datas container
-        List<List<String>> datas = new ArrayList<List<String>>();
-        List<String> headers = new ArrayList<String>();
+        List<List<String>> datas = new ArrayList<>();
+        List<String> headers = new ArrayList<>();
         
         // Column id container
-        List<String> columnList = new ArrayList<String>();
-        
+        List<String> columnList;
+        columnList = new ArrayList<String>();
+
         // Set datatables headerProp
-        Object[] columns = (Object[]) getProperty("columns");
+        Object[] columns;
+        Map<String, Object> loadBinder = (Map<String, Object>) getProperty("loadBinder");
+        if(MonitoringMultirowFormBinder.class.getName().equals(loadBinder.get("className"))) {
+            columns = (Object[]) getProperty("monitoringColumns");
+        } else {
+            columns = (Object[]) getProperty("columns");
+        }
+
         if (columns != null && columns.length > 0) {
             Map<String, String> headerProp = null;
             for (Object o : columns) {
@@ -106,7 +118,39 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", new Object[] { AuditTrailMultirowLoadBinder.class.getName() } , true, "/messages/AuditTrailFormElement");
+        List<Map<String, String>> monitoringOptions = Arrays.stream(MonitoringMultirowFormBinder.Fields.values())
+                .collect(ArrayList::new, (list, field) -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("value", field.toString());
+                    map.put("label", field.getLabel());
+                    list.add(map);
+                }, Collection::addAll);
+
+        WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+        if(workflowManager != null) {
+            String packageId = AppUtil.getCurrentAppDefinition().getPackageDefinition().getId();
+            monitoringOptions.addAll(workflowManager.getProcessList(packageId)
+                    .stream()
+                    .flatMap(p -> workflowManager.getProcessVariableDefinitionList(p.getId()).stream())
+                    .map(WorkflowVariable::getId)
+                    .distinct()
+                    .sorted()
+                    .map(v -> {
+                        Map<String, String> map = new HashMap<>();
+                        map.put("value", v);
+                        map.put("label", "Variable \\\"" + v + "\\\"");
+                        return map;
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new)));
+        }
+
+        String[] args = {
+                AuditTrailMultirowLoadBinder.class.getName(),
+                MonitoringMultirowFormBinder.class.getName(),
+                MonitoringMultirowFormBinder.class.getName(),
+                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
+        };
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", args , true, "/messages/AuditTrailFormElement");
     }
 
     public String getFormBuilderCategory() {

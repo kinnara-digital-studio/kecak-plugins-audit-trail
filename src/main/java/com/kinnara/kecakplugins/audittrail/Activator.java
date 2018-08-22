@@ -18,6 +18,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(AuditTrailFormTableElement.class.getName(), new AuditTrailFormTableElement(), null));
         registrationList.add(context.registerService(AuditTrailMultirowLoadBinder.class.getName(), new AuditTrailMultirowLoadBinder(), null));
         registrationList.add(context.registerService(AuditTrailFormCollector.class.getName(), new AuditTrailFormCollector(), null));
+        registrationList.add(context.registerService(MonitoringMultirowFormBinder.class.getName(), new MonitoringMultirowFormBinder(), null));
     }
 
     public void stop(BundleContext context) {

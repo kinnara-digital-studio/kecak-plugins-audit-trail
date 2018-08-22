@@ -1,9 +1,7 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import org.apache.commons.collections.HashBag;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.service.AppPluginUtil;
-import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataDao;
 import org.joget.apps.form.model.*;
@@ -13,7 +11,6 @@ import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
-import org.joget.workflow.model.WorkflowProcessLink;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
@@ -78,8 +75,9 @@ implements FormLoadBinder,
         if("true".equalsIgnoreCase(getPropertyString("pendingActivity"))) {
 			workflowProcessLinkDao.getLinks(primaryKey).stream()
 					.map(l -> workflowManager.getRunningProcessById(l.getProcessId()))
+					.filter(Objects::nonNull)
+					.filter(p -> Objects.nonNull(p.getState()))
 					.filter(p -> p.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
-
 					.max(Comparator.comparing(WorkflowProcess::getInstanceId))
 					.map(p -> {
 						Object[] pendingActivityValues = (Object[]) getProperty("pendingActivityValues");
