@@ -3,6 +3,7 @@ package com.kinnara.kecakplugins.audittrail;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
@@ -127,8 +128,9 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
                 }, Collection::addAll);
 
         WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-        if(workflowManager != null) {
-            String packageId = AppUtil.getCurrentAppDefinition().getPackageDefinition().getId();
+        AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        if(workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
+            String packageId = appDefinition.getPackageDefinition().getId();
             monitoringOptions.addAll(workflowManager.getProcessList(packageId)
                     .stream()
                     .flatMap(p -> workflowManager.getProcessVariableDefinitionList(p.getId()).stream())
