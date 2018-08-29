@@ -11,15 +11,10 @@ import org.joget.apps.form.model.FormBuilderPaletteElement;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
-import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import sun.jvm.hotspot.utilities.AddressOps;
 
 /**
  *
@@ -45,7 +40,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         // Set datatables headerProp
         Object[] columns;
         Map<String, Object> loadBinder = (Map<String, Object>) getProperty("loadBinder");
-        if(MonitoringMultirowFormBinder.class.getName().equals(loadBinder.get("className"))) {
+        if(AuditTrailMonitoringMultirowFormBinder.class.getName().equals(loadBinder.get("className"))) {
             columns = (Object[]) getProperty("monitoringColumns");
         } else {
             columns = (Object[]) getProperty("columns");
@@ -119,7 +114,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     }
 
     public String getPropertyOptions() {
-        List<Map<String, String>> monitoringOptions = Arrays.stream(MonitoringMultirowFormBinder.Fields.values())
+        List<Map<String, String>> monitoringOptions = Arrays.stream(AuditTrailMonitoringMultirowFormBinder.Fields.values())
                 .collect(ArrayList::new, (list, field) -> {
                     Map<String, String> map = new HashMap<>();
                     map.put("value", field.toString());
@@ -148,8 +143,8 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
         String[] args = {
                 AuditTrailMultirowLoadBinder.class.getName(),
-                MonitoringMultirowFormBinder.class.getName(),
-                MonitoringMultirowFormBinder.class.getName(),
+                AuditTrailMonitoringMultirowFormBinder.class.getName(),
+                AuditTrailMonitoringMultirowFormBinder.class.getName(),
                 new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
         };
         return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", args , true, "/messages/AuditTrailFormElement");

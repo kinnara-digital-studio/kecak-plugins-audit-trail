@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class MonitoringMultirowFormBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
+public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
 
     public enum Fields {
 
@@ -146,7 +146,7 @@ public class MonitoringMultirowFormBinder extends FormBinder implements FormLoad
 
     @Override
     public String getName() {
-        return AppPluginUtil.getMessage("monitoringMultirowFormBinder.title", getClassName(), "/messages/MonitoringMultirowFormBinder");
+        return AppPluginUtil.getMessage("monitoringMultirowFormBinder.title", getClassName(), "/messages/AuditTrailMonitoringMultirowFormBinder");
     }
 
     @Override
