@@ -1,27 +1,30 @@
 package com.kinnara.kecakplugins.audittrail;
 
 import org.enhydra.shark.api.common.SharkConstants;
+import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
-import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
+import org.joget.plugin.base.Plugin;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
+import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
 import org.joget.workflow.model.service.WorkflowManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
+public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
+        implements FormLoadBinder, FormLoadMultiRowElementBinder {
 
     public enum Fields {
 
@@ -31,6 +34,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implement
         ACTIVITY_ID("activityId", "Activity ID"),
         ACTIVITY_NAME("activityName", "Activity Name"),
         CREATED_TIME("createdTime", "Created Time"),
+        FINISH_TIME("finishTime", "Finish Time"),
         USERNAME("username", "Username"),
         USER_FULLNAME("userFullname", "User Full Name"),
         PARTICIPANT("participantId", "Participant");
@@ -64,49 +68,67 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implement
         WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
         WorkflowAssignment wfAssignment = workflowManager.getAssignment(formData.getActivityId());
 
+
+//        Function<String, String> mapUsernameToFullUsername = u -> {
+//            ExtDirectoryManager directoryManager = (ExtDirectoryManager)AppUtil.getApplicationContext().getBean("directoryManager");
+//            User user = directoryManager.getUserByUsername(u);
+//            if(user == null){
+//                return u;
+//            } else {
+//                return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
+//            }
+//        };
+
         return workflowProcessLinkDao.getLinks(primaryKey).stream()
                 .filter(Objects::nonNull)
                 .flatMap(l -> workflowManager.getActivityList(l.getProcessId(), null, null, null, null).stream())
 
                 // only handle activity
-                .filter(activity -> WorkflowActivity.TYPE_NORMAL.equals(workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId()).getType()))
+                .filter(activity -> {
+                    WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                    return WorkflowActivity.TYPE_NORMAL.equals(definition.getType())
+                            || (WorkflowActivity.TYPE_TOOL.equals(definition.getType())
+                                    && "true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))
+                                    && definition.getId().equals(getPropertyString("startProcessTool"))
+                            );
+                })
 
                 // only show unaborted activity
                 .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
 
                 .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
+
+                // if property showPendingValue is checked, then display open assignment
+                .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
+                        || !activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
+
                 .collect(() -> {
                     // handle first record, get from process'
                     FormRowSet formRowSet = new FormRowSet();
-                    WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                    WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
-                    FormRow row = new FormRow();
-                    row.put(Fields.ID.toString(), process.getId());
-                    row.put(Fields.PROCESS_ID.toString(), process.getId());
-                    row.put(Fields.PROCESS_NAME.toString(), process.getName());
-                    row.put(Fields.ACTIVITY_ID.toString(), "startProcess");
-                    row.put(Fields.ACTIVITY_NAME.toString(), "Start Process");
-                    row.put(Fields.CREATED_TIME.toString(), info.getStartedTime());
-                    row.put(Fields.USERNAME.toString(), process.getRequesterId());
-                    row.put(Fields.USER_FULLNAME.toString(), ((Function<String, String>) u -> {
-                        ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
-                        User user = directoryManager.getUserByUsername(u);
-                        if (user == null) {
-                            return u;
-                        } else {
-                            return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
-                        }
-                    }).apply(process.getRequesterId()));
 
-                    // get first process
+                    if(!"true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))) {
+                        WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                        WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
+                        FormRow row = new FormRow();
+                        row.put(Fields.ID.toString(), process.getId());
+                        row.put(Fields.PROCESS_ID.toString(), process.getId());
+                        row.put(Fields.PROCESS_NAME.toString(), process.getName());
+                        row.put(Fields.ACTIVITY_ID.toString(), "startProcess");
+                        row.put(Fields.ACTIVITY_NAME.toString(), "Start Process");
+                        row.put(Fields.CREATED_TIME.toString(), info.getStartedTime());
+                        row.put(Fields.FINISH_TIME.toString(), info.getStartedTime()); // for start process this should be the same
+                        row.put(Fields.USERNAME.toString(), process.getRequesterId());
+                        row.put(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
 
-                    workflowManager.getProcessVariableList(primaryKey).forEach(v -> LogUtil.info(getClassName(), "Process Variables id ["+v.getId()+"] name ["+v.getName()+"] val ["+v.getVal()+"]"));
+                        // get first process
 
-                    formRowSet.add(row);
+                        formRowSet.add(row);
+                    }
                     return formRowSet;
                 }, (formRows, activity) -> {
                     FormRow row = new FormRow();
                     WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
+                    WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
 
                     row.put(Fields.ID.toString(), activity.getId());
                     row.put(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
@@ -114,22 +136,26 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implement
                     row.put(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
                     row.put(Fields.ACTIVITY_NAME.toString(), activity.getName());
                     row.put(Fields.CREATED_TIME.toString(), info.getCreatedTime());
+                    if(info.getFinishTime() != null)
+                        row.put(Fields.FINISH_TIME.toString(), info.getFinishTime());
                     row.put(Fields.PARTICIPANT.toString(), info.getPerformer());
-                    row.put(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                    row.put(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[] {info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
-                            .filter(u -> !u.isEmpty())
-                            .map(u -> {
-                                ExtDirectoryManager directoryManager = (ExtDirectoryManager)AppUtil.getApplicationContext().getBean("directoryManager");
-                                User user = directoryManager.getUserByUsername(u);
-                                if(user == null){
-                                    return u;
-                                } else {
-                                    return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
-                                }
-                            })
-                            .filter(u -> !u.isEmpty())
-                            .collect(Collectors.joining(","))
-                    );
+
+                    if("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
+                        WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                        row.put(Fields.USERNAME.toString(), process.getRequesterId());
+                        row.put(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                    } else {
+                        row.put(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
+                        row.put(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[] {info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                .filter(u -> !u.isEmpty())
+                                .map(this::mapUsernameToFullUsername)
+                                .filter(u -> !u.isEmpty())
+                                .collect(Collectors.joining(","))
+                        );
+                    }
+
+                    Map<String, String> mapPendingValues = new HashMap<>();
+                    Object[] pendingValues = ((Object[])getProperty("pendingValues"));
 
                     // no need to show variables value of current assignment
                     boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
@@ -137,7 +163,27 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implement
                         row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
                                 .collect(
                                         FormRow::new,
-                                        (formRow, workflowVariable) -> formRow.put(workflowVariable.getName(), workflowVariable.getVal()),
+                                        (formRow, workflowVariable) -> {
+                                            String workflowVariableName = workflowVariable.getName();
+                                            formRow.put(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : workflowVariable.getVal());
+                                        },
+                                        FormRow::putAll));
+                    } else if(pendingValues != null) {
+                        mapPendingValues.putAll(Arrays.stream(pendingValues)
+                                .map(rows -> (Map<String, Object>) rows)
+                                .collect(
+                                        HashMap::new,
+                                        (hashMap, rows) -> hashMap.put(String.valueOf(rows.get("columnId")),
+                                                String.valueOf(AppUtil.processHashVariable(String.valueOf(rows.get("columnValue")), null, null, null))),
+                                        Map::putAll));
+
+                        row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
+                                .collect(
+                                        FormRow::new,
+                                        (formRow, workflowVariable) -> {
+                                            String workflowVariableName = workflowVariable.getName();
+                                            formRow.put(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : "");
+                                        },
                                         FormRow::putAll));
                     }
                     formRows.add(0, row);
@@ -171,6 +217,68 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder implement
 
     @Override
     public String getPropertyOptions() {
-        return "";
+        List<Map<String, String>> monitoringOptions = new ArrayList<>();
+
+        WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+        AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        if(workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
+            String packageId = appDefinition.getPackageDefinition().getId();
+            monitoringOptions.addAll(workflowManager.getProcessList(packageId)
+                    .stream()
+                    .flatMap(p -> workflowManager.getProcessVariableDefinitionList(p.getId()).stream())
+                    .map(WorkflowVariable::getId)
+                    .distinct()
+                    .sorted()
+                    .map(v -> {
+                        Map<String, String> map = new HashMap<>();
+                        map.put("value", v);
+                        map.put("label", v);
+                        return map;
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new)));
+        }
+
+        JSONObject startProcessToolProperty = new JSONObject();
+        try {
+            startProcessToolProperty.put("name", "startProcessTool");
+            startProcessToolProperty.put("label","@@monitoringMultirowFormBinder.startProcessTool@@");
+            startProcessToolProperty.put("control_field", "toolAsStartProcess");
+            startProcessToolProperty.put("control_value", "true");
+            startProcessToolProperty.put("required", "true");
+
+            if(appDefinition != null && isClass("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+                String appId = appDefinition.getAppId();
+                String appVersion = appDefinition.getVersion().toString();
+
+                startProcessToolProperty.put("type","selectbox");
+                startProcessToolProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
+            } else {
+                startProcessToolProperty.put("type","textfield");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String[] args = {
+                startProcessToolProperty.toString().replaceAll("\"", "'"),
+                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
+        };
+        return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailMonitoringMultirowLoadBinder.json", args, false, "/messages/AuditTrailMonitoringMultirowFormBinder");
+    }
+
+    private boolean isClass(String className) {
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        Plugin plugin = pluginManager.getPlugin(className);
+        return plugin != null;
+    }
+
+    private String mapUsernameToFullUsername(String u)  {
+        ExtDirectoryManager directoryManager = (ExtDirectoryManager)AppUtil.getApplicationContext().getBean("directoryManager");
+        User user = directoryManager.getUserByUsername(u);
+        if(user == null){
+            return u;
+        } else {
+            return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
+        }
     }
 }

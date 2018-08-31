@@ -135,7 +135,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
                     .map(v -> {
                         Map<String, String> map = new HashMap<>();
                         map.put("value", v);
-                        map.put("label", "Variable \\\"" + v + "\\\"");
+                        map.put("label", "Variable " + v);
                         return map;
                     })
                     .collect(Collectors.toCollection(ArrayList::new)));

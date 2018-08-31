@@ -1,0 +1,51 @@
+[
+	{
+		title : '@@monitoringMultirowFormBinder.title@@',
+		properties : [
+			{
+				name : 'toolAsStartProcess',
+				label : '@@monitoringMultirowFormBinder.toolAsStartProcess@@',
+				type : 'checkbox',
+				options : [
+					{
+						value : 'true',
+						label : ''
+					}
+				]
+			},
+			%s,
+			{
+				name : 'showPendingValue',
+				label : '@@monitoringMultirowFormBinder.showPendingValue@@',
+				type : 'checkbox',
+				value : '',
+				options : [
+					{
+						value : 'true',
+						label : ''
+					}
+				]
+			},
+			{
+				name : 'pendingValues',
+				label : '@@monitoringMultirowFormBinder.pendingValues@@',
+				type : 'grid',
+				control_field : 'showPendingValue',
+				control_value : 'true',
+				columns : [
+					{
+						key : 'columnId',
+						label : '@@monitoringMultirowFormBinder.columns.id@@',
+						required : 'true',
+						options : %s
+					},
+					{
+						key : 'columnValue',
+						label : '@@monitoringMultirowFormBinder.columns.value@@',
+						required : 'true'
+					}
+				]
+			}
+		]
+	}
+]

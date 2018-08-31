@@ -46,17 +46,19 @@
         required : 'true',
         control_field : 'loadBinder',
         control_value : '%s',
-        columns : [{
-          key : 'columnId',
-          label : '@@auditTrailFormElement.columns.id@@',
-          required : 'true',
-          options : %s
-        },
+        columns : [
           {
             key : 'columnLabel',
             label : '@@auditTrailFormElement.columns.label@@',
             required : 'true'
-          }]
+          },
+          {
+            key : 'columnId',
+            label : '@@auditTrailFormElement.columns.id@@',
+            required : 'true',
+            options : %s
+          }
+        ]
       }
     ]
   }, {
