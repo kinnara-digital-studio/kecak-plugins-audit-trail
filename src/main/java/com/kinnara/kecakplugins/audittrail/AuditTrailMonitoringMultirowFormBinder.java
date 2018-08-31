@@ -66,18 +66,6 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         ApplicationContext appContext = AppUtil.getApplicationContext();
         WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
         WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
-        WorkflowAssignment wfAssignment = workflowManager.getAssignment(formData.getActivityId());
-
-
-//        Function<String, String> mapUsernameToFullUsername = u -> {
-//            ExtDirectoryManager directoryManager = (ExtDirectoryManager)AppUtil.getApplicationContext().getBean("directoryManager");
-//            User user = directoryManager.getUserByUsername(u);
-//            if(user == null){
-//                return u;
-//            } else {
-//                return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
-//            }
-//        };
 
         return workflowProcessLinkDao.getLinks(primaryKey).stream()
                 .filter(Objects::nonNull)
