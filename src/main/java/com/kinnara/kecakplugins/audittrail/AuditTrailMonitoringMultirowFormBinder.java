@@ -10,7 +10,6 @@ import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.plugin.base.Plugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowActivity;
-import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
@@ -73,11 +72,15 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
                 // only handle activity
                 .filter(activity -> {
-                    WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
-                    return WorkflowActivity.TYPE_NORMAL.equals(definition.getType())
-                            || (WorkflowActivity.TYPE_TOOL.equals(definition.getType())
-                                    && "true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))
-                                    && definition.getId().equals(getPropertyString("startProcessTool"))
+                    final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                    return
+                            WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) || (
+                                            WorkflowActivity.TYPE_TOOL.equals(definition.getType()) && (
+                                                            ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && definition.getId().equals(getPropertyString("startProcessTool"))) ||
+                                                                    (getPropertyString("alsoDisplayTools") != null && Arrays.stream(getPropertyString("alsoDisplayTools").split(";"))
+                                                                            .filter(s -> !s.isEmpty())
+                                                                            .anyMatch(id -> id.equals(definition.getId())))
+                                            )
                             );
                 })
 
@@ -234,7 +237,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             startProcessToolProperty.put("control_value", "true");
             startProcessToolProperty.put("required", "true");
 
-            if(appDefinition != null && isClass("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
                 String appId = appDefinition.getAppId();
                 String appVersion = appDefinition.getVersion().toString();
 
@@ -243,18 +246,33 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             } else {
                 startProcessToolProperty.put("type","textfield");
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException ignored) { }
+
+        JSONObject alsoDislpayToolProperty = new JSONObject();
+        try {
+            alsoDislpayToolProperty.put("name", "alsoDisplayTools");
+            alsoDislpayToolProperty.put("label", "@@monitoringMultirowFormBinder.alsoDisplayTools@@");
+            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+                String appId = appDefinition.getAppId();
+                String appVersion = appDefinition.getVersion().toString();
+                alsoDislpayToolProperty.put("type", "multiselect");
+                alsoDislpayToolProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
+            } else {
+                alsoDislpayToolProperty.put("type", "textfield");
+                alsoDislpayToolProperty.put("description", "@@monitoringMultirowFormBinder.alsoDisplayTools.desc@@");
+            }
+
+        } catch (JSONException ignored) { }
 
         String[] args = {
                 startProcessToolProperty.toString().replaceAll("\"", "'"),
-                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
+                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
+                alsoDislpayToolProperty.toString().replaceAll("\"", "'")
         };
         return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailMonitoringMultirowLoadBinder.json", args, false, "/messages/AuditTrailMonitoringMultirowFormBinder");
     }
 
-    private boolean isClass(String className) {
+    private boolean isClassInstalled(String className) {
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
         Plugin plugin = pluginManager.getPlugin(className);
         return plugin != null;
