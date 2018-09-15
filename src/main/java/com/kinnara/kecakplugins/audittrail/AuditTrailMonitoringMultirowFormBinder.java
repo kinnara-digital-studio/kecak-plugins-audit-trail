@@ -68,19 +68,26 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
         return workflowProcessLinkDao.getLinks(primaryKey).stream()
                 .filter(Objects::nonNull)
-                .flatMap(l -> workflowManager.getActivityList(l.getProcessId(), null, null, null, null).stream())
+                .flatMap(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null).stream())
 
                 // only handle activity
                 .filter(activity -> {
                     final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
                     return
-                            WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) || (
-                                            WorkflowActivity.TYPE_TOOL.equals(definition.getType()) && (
+                            (
+                                    WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) && (
+                                            getPropertyString("excludeActivities") == null
+                                                    || Arrays.stream(getPropertyString("excludeActivities").split(";"))
+                                                            .filter(s -> !s.isEmpty())
+                                                            .noneMatch(id -> id.equals(definition.getId()))
+                                    )
+                            ) || (
+                                    WorkflowActivity.TYPE_TOOL.equals(definition.getType()) && (
                                                             ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && definition.getId().equals(getPropertyString("startProcessTool"))) ||
                                                                     (getPropertyString("alsoDisplayTools") != null && Arrays.stream(getPropertyString("alsoDisplayTools").split(";"))
                                                                             .filter(s -> !s.isEmpty())
                                                                             .anyMatch(id -> id.equals(definition.getId())))
-                                            )
+                                    )
                             );
                 })
 
@@ -101,15 +108,15 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                         WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
                         FormRow row = new FormRow();
-                        row.put(Fields.ID.toString(), process.getId());
-                        row.put(Fields.PROCESS_ID.toString(), process.getId());
-                        row.put(Fields.PROCESS_NAME.toString(), process.getName());
+                        row.put(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.put(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.put(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
                         row.put(Fields.ACTIVITY_ID.toString(), "startProcess");
                         row.put(Fields.ACTIVITY_NAME.toString(), "Start Process");
-                        row.put(Fields.CREATED_TIME.toString(), info.getStartedTime());
-                        row.put(Fields.FINISH_TIME.toString(), info.getStartedTime()); // for start process this should be the same
-                        row.put(Fields.USERNAME.toString(), process.getRequesterId());
-                        row.put(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                        row.put(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : info.getStartedTime());
+                        row.put(Fields.FINISH_TIME.toString(), info == null ? "" : info.getStartedTime()); // for start process this should be the same
+                        row.put(Fields.USERNAME.toString(), process == null? "" : process.getRequesterId());
+                        row.put(Fields.USER_FULLNAME.toString(), process == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
 
                         // get first process
 
@@ -264,10 +271,26 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
         } catch (JSONException ignored) { }
 
+        JSONObject excludeActivityProperty = new JSONObject();
+        try {
+            excludeActivityProperty.put("name", "excludeActivities");
+            excludeActivityProperty.put("label", "@@monitoringMultirowFormBinder.excludeActivities@@");
+            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+                String appId = appDefinition.getAppId();
+                String appVersion = appDefinition.getVersion().toString();
+                excludeActivityProperty.put("type", "multiselect");
+                excludeActivityProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_NORMAL);
+            } else {
+                excludeActivityProperty.put("type", "textfield");
+                excludeActivityProperty.put("description", "@@monitoringMultirowFormBinder.excludeActivities.desc@@");
+            }
+        } catch (JSONException ignored) { }
+
         String[] args = {
                 startProcessToolProperty.toString().replaceAll("\"", "'"),
                 new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
-                alsoDislpayToolProperty.toString().replaceAll("\"", "'")
+                alsoDislpayToolProperty.toString().replaceAll("\"", "'"),
+                excludeActivityProperty.toString().replaceAll("\"", "'")
         };
         return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailMonitoringMultirowLoadBinder.json", args, false, "/messages/AuditTrailMonitoringMultirowFormBinder");
     }

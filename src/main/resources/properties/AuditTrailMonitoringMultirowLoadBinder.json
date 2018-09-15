@@ -42,10 +42,10 @@
 					{
 						key : 'columnValue',
 						label : '@@monitoringMultirowFormBinder.columns.value@@',
-						required : 'true'
 					}
 				]
 			},
+			%s,
 			%s
 		]
 	}
