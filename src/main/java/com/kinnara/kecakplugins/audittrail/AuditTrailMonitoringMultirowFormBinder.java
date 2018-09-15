@@ -114,8 +114,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         row.put(Fields.ACTIVITY_ID.toString(), "startProcess");
                         row.put(Fields.ACTIVITY_NAME.toString(), "Start Process");
                         row.put(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : info.getStartedTime());
-                        row.put(Fields.FINISH_TIME.toString(), info == null ? "" : info.getStartedTime()); // for start process this should be the same
-                        row.put(Fields.USERNAME.toString(), process == null? "" : process.getRequesterId());
+                        row.put(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : info.getStartedTime()); // for start process this should be the same
+                        row.put(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
                         row.put(Fields.USER_FULLNAME.toString(), process == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
 
                         // get first process
