@@ -19,6 +19,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,6 +56,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             return name;
         }
     }
+
+
+    public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
@@ -108,15 +113,15 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                         WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
                         FormRow row = new FormRow();
-                        row.put(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
-                        row.put(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
-                        row.put(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
-                        row.put(Fields.ACTIVITY_ID.toString(), "startProcess");
-                        row.put(Fields.ACTIVITY_NAME.toString(), "Start Process");
-                        row.put(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : info.getStartedTime());
-                        row.put(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : info.getStartedTime()); // for start process this should be the same
-                        row.put(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
-                        row.put(Fields.USER_FULLNAME.toString(), process == null || process.getRequesterId() == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
+                        row.setProperty(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
+                        row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
+                        row.setProperty(Fields.ACTIVITY_NAME.toString(), "Start Process");
+                        row.setProperty(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime()));
+                        row.setProperty(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime())); // for start process this should be the same
+                        row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
+                        row.setProperty(Fields.USER_FULLNAME.toString(), process == null || process.getRequesterId() == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
 
                         // get first process
 
@@ -128,23 +133,23 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
                     WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
 
-                    row.put(Fields.ID.toString(), activity.getId());
-                    row.put(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
-                    row.put(Fields.PROCESS_NAME.toString(), activity.getProcessName());
-                    row.put(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
-                    row.put(Fields.ACTIVITY_NAME.toString(), activity.getName());
-                    row.put(Fields.CREATED_TIME.toString(), info.getCreatedTime());
+                    row.setProperty(Fields.ID.toString(), activity.getId());
+                    row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
+                    row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
+                    row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
+                    row.setProperty(Fields.ACTIVITY_NAME.toString(), activity.getName());
+                    row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(info.getCreatedTime()));
                     if(info.getFinishTime() != null)
-                        row.put(Fields.FINISH_TIME.toString(), info.getFinishTime());
-                    row.put(Fields.PARTICIPANT.toString(), info.getPerformer());
+                        row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
+                    row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
                     if("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                        row.put(Fields.USERNAME.toString(), process.getRequesterId());
-                        row.put(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                        row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
+                        row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
                     } else {
-                        row.put(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                        row.put(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[] {info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                        row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
+                        row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[] {info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
                                 .filter(u -> !u.isEmpty())
                                 .map(this::mapUsernameToFullUsername)
                                 .filter(u -> !u.isEmpty())
@@ -163,7 +168,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                         FormRow::new,
                                         (formRow, workflowVariable) -> {
                                             String workflowVariableName = workflowVariable.getName();
-                                            formRow.put(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : workflowVariable.getVal());
+                                            formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : String.valueOf(workflowVariable.getVal()));
                                         },
                                         FormRow::putAll));
                     } else if(pendingValues != null) {
@@ -180,7 +185,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                         FormRow::new,
                                         (formRow, workflowVariable) -> {
                                             String workflowVariableName = workflowVariable.getName();
-                                            formRow.put(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : "");
+                                            formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : "");
                                         },
                                         FormRow::putAll));
                     }
