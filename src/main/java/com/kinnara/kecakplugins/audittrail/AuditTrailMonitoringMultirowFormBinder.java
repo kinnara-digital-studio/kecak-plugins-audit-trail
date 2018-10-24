@@ -58,7 +58,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
     }
 
 
-    public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
