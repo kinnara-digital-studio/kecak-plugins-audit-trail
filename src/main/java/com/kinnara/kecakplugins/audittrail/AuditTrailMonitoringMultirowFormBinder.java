@@ -60,8 +60,12 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    private Date keepCreatedDate = null;
+
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
+        final Map<String, Date> startTime = new HashMap<>();
+
         // do not load data for empty primary key
         if(primaryKey == null || primaryKey.isEmpty()) {
             return null;
@@ -97,7 +101,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 })
 
                 // only show unaborted activity
-                .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
+//                .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
 
                 .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
 
@@ -129,18 +133,29 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     }
                     return formRowSet;
                 }, (formRows, activity) -> {
-                    FormRow row = new FormRow();
                     WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
                     WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                    FormRow row = new FormRow();
+
+                    if(SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
+                        // keep aborted activity first data
+                        if(keepCreatedDate == null)
+                            keepCreatedDate = info.getCreatedTime();
+                        return;
+                    }
 
                     row.setProperty(Fields.ID.toString(), activity.getId());
                     row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
                     row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
                     row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
                     row.setProperty(Fields.ACTIVITY_NAME.toString(), activity.getName());
-                    row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(info.getCreatedTime()));
+
+                    row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : info.getCreatedTime()));
+                    keepCreatedDate = null;
+
                     if(info.getFinishTime() != null)
                         row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
+
                     row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
                     if("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
