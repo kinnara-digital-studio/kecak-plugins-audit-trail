@@ -1,0 +1,51 @@
+
+/* Timeline */
+
+.timeline.block-content-full * {
+    font-family: Quicksand !important;
+      letter-spacing: 0;
+      font-weight:bold !important;
+  }
+  .timeline.block-content-full strong{
+      color:#000
+  }
+  .timeline-time.date,
+  .timeline-time.time{
+      color:#959191;
+  }
+
+  .timeline-icon {
+      position: absolute;
+      left: 0;
+      width: 35px;
+      height: 35px;
+      border-radius: 100px;
+      border: solid 2px #909090;
+      background: #fff;
+      overflow: hidden;
+      top: 0;
+  }
+  .push-bit{
+      margin-bottom: 5px;
+  }
+  .timeline-list li {
+      position: relative;
+      padding-left: 50px;
+      padding-bottom: 20px;
+  }
+
+  .timeline-list li:before {
+      position: absolute;
+      content: ' ';
+      height: 100%;
+      width: 3px;
+      background: #959191;
+      left: 16px;
+  }
+  .timeline-list{
+      list-style: none;
+      margin-left: 20px;
+  }
+  .timeline-list li:last-child:before {
+      display: none;
+  }

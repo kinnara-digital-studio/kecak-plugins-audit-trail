@@ -1,0 +1,96 @@
+[{
+  title: 'Audit Trail Progress Settings',
+  properties: [{
+    name : 'id',
+    label : 'ID',
+    type : 'textfield',
+    required : 'True',
+    regex_validation : '^[a-zA-Z0-9_]+$',
+    validation_message : '@@form.textfield.invalidId@@'
+  },
+    {
+      name:'formDefId',
+      label:'Form ID',
+      description:'Audit Trail Form',
+      type:'selectbox',
+      options_ajax:'[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options',
+      required: 'true'
+    },
+    {
+      name : 'fieldProcessId',
+      label : 'Process Id Field',
+      type : 'textfield',
+      required : 'true',
+      description : 'Process ID Field'
+    },
+    {
+      name : 'fieldStatus',
+      label : 'Status Field',
+      type : 'textfield',
+      required : 'true',
+      description : 'Field for audit trail status'
+    },
+    {
+      name: 'statusReplacement',
+      label: 'Status Replacement',
+      description: 'Parameters for In Progress To Do List',
+      type: 'grid',
+      required: 'true',
+      columns: [
+        {
+          key: 'status',
+          label: 'Status',
+          required: 'true'
+        },
+        {
+          key: 'text',
+          label: 'Text',
+          required: 'true'
+        },
+        {
+          key: 'replaceKey',
+          label: 'Replacement Key',
+          required: 'true'
+        },
+        {
+          key: 'replaceValue',
+          label: 'Replacement Value (Field in Audit Table)',
+          required: 'true'
+        }
+      ]
+    }
+  ]
+},
+  {
+    title: 'User References Table',
+    properties: [
+      {
+        name:'formUserDef',
+        label:'Form ID',
+        description:'Form which is used as user reference for image and name',
+        type:'selectbox',
+        options_ajax:'[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options',
+        required: 'true'
+      },
+      {
+        name : 'fieldUserPrimaryKey',
+        label : 'User Primary Key Field',
+        type : 'textfield',
+        required : 'true',
+        description : '(on user table)'
+      },
+      {
+        name : 'fieldUserForeignKey',
+        label : 'User Foreign Key Field',
+        type : 'textfield',
+        required : 'true',
+        description : '(on audit trail table)'
+      },
+      {
+        name : 'fieldImageSource',
+        label : 'Image Field',
+        type : 'textfield',
+        description : 'Field used as image source'
+      }
+    ]
+  }]
