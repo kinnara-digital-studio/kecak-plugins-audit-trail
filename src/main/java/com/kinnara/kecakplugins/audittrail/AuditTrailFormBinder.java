@@ -19,6 +19,7 @@ import java.util.function.Consumer;
  * This Form Binder normally be implemented on Sections which contents need to be
  * tracked
  */
+@Deprecated
 public class AuditTrailFormBinder extends WorkflowFormBinder{	
 	@Override
 	public String getClassName() {
