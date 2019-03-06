@@ -103,21 +103,28 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
                 Map<String, String> auditRow = new HashMap<String, String>();
                 auditRow.put("image", "");
                 FormRow rUser = null;
+                String pp = "";
                 if(!getPropertyString("fieldUsername").isEmpty()){
                     ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
                     User user = directoryManager.getUserByUsername(row.getProperty(getPropertyString("fieldUsername")));
                     int blobLength = 0;
-                    String pp = "";
-                    try {
-                        blobLength = (int) user.getProfilePicture().length();
-                        byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
-                        pp = Base64.getEncoder().encodeToString(blobAsBytes);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    if(user != null) {
+                        rUser = new FormRow();
+                        rUser.setProperty("firstName",user.getFirstName());
+                        rUser.setProperty("lastName",user.getLastName());
+                        if(user.getProfilePicture() != null) {
+                            try {
+                                blobLength = (int) user.getProfilePicture().length();
+                                byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
+                                pp = Base64.getEncoder().encodeToString(blobAsBytes);
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                    if(!pp.isEmpty()){
-                        auditRow.put("image", pp);
-                    }
+                }
+                if(!pp.isEmpty()){
+                    auditRow.put("image", pp);
                 }
                 String status = getAuditStatus(row.getProperty(getPropertyString("fieldStatus")), row,rUser, formData.getActivityId());
                 auditRow.put("status", status);
