@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class AuditTrailMultirowLoadBinder extends FormBinder
 implements FormLoadBinder,
 		FormLoadMultiRowElementBinder{

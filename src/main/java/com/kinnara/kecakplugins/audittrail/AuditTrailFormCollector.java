@@ -16,6 +16,7 @@ import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultAuditTrailPlugin;
 import org.joget.plugin.base.PluginManager;
 
+@Deprecated
 public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 
 	public String getLabel() {

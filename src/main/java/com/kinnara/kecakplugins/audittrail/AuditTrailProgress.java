@@ -75,12 +75,12 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
 
     @Override
     public String getVersion() {
-        return "1.0.0";
+        return getClass().getPackage().getImplementationVersion();
     }
 
     @Override
     public String getDescription() {
-        return this.getName();
+        return getClass().getPackage().getImplementationTitle();
     }
 
     @Override
