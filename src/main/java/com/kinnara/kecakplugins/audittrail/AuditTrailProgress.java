@@ -11,6 +11,7 @@ import org.joget.commons.util.FileManager;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.User;
+import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.model.service.WorkflowUserManager;
@@ -18,11 +19,9 @@ import org.springframework.context.ApplicationContext;
 import sun.rmi.runtime.Log;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class AuditTrailProgress extends Element implements FormBuilderPaletteElement{
@@ -104,20 +103,20 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
                 Map<String, String> auditRow = new HashMap<String, String>();
                 auditRow.put("image", "");
                 FormRow rUser = null;
-                if(!getPropertyString("formUserDef").isEmpty()){
-                    String userTable = appService.getFormTableName(appDef, getPropertyString("formUserDef"));
-                    String fieldPK = getPropertyString("fieldUserPrimaryKey");
-                    if(!fieldPK.equals("id")){
-                        fieldPK = "c_" + fieldPK;
+                if(!getPropertyString("fieldUsername").isEmpty()){
+                    ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
+                    User user = directoryManager.getUserByUsername(row.getProperty(getPropertyString("fieldUsername")));
+                    int blobLength = 0;
+                    String pp = "";
+                    try {
+                        blobLength = (int) user.getProfilePicture().length();
+                        byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
+                        pp = Base64.getEncoder().encodeToString(blobAsBytes);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
-                    FormRowSet rsUser = formDataDao.find(getPropertyString("formUserDef"), userTable, " WHERE "+fieldPK+"=?",
-                            new Object[] { row.getProperty(getPropertyString("fieldUserForeignKey")) }, null, null, null, null);
-                    if(!rsUser.isEmpty()) {
-                        rUser = rsUser.get(0);
-                        if(!getPropertyString("fieldImageSource").isEmpty()) {
-                            String img = filePath + getPropertyString("formUserDef") + "/" + rUser.getId() + "/" + rUser.getProperty(getPropertyString("fieldImageSource")) + ".";
-                            auditRow.put("image", img);
-                        }
+                    if(!pp.isEmpty()){
+                        auditRow.put("image", pp);
                     }
                 }
                 String status = getAuditStatus(row.getProperty(getPropertyString("fieldStatus")), row,rUser, formData.getActivityId());

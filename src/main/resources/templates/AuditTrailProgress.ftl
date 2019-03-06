@@ -4,8 +4,7 @@
 	<#list auditList as auditRow >
 		<li class="timeline-content">
 			<div class="text-light-op">
-
-				<img src="${request.contextPath}${auditRow.image}" onerror="this.src='${request.contextPath}/plugin/${className}/images/default-avatar.png'" class="timeline-icon">
+				<img src="data:image/jpeg;base64,${auditRow.image}" onerror="this.src='${request.contextPath}/plugin/${className}/images/default-avatar.png'" class="timeline-icon">
 			</div>
 			<span class="push-bit">${auditRow.status}</span><br>
 			<span class="timeline-time date">${auditRow.date}</span><br>

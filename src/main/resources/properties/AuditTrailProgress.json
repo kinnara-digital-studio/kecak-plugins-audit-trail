@@ -24,6 +24,12 @@
       description : 'Process ID Field'
     },
     {
+      name : 'fieldUsername',
+      label : 'Username Field',
+      type : 'textfield',
+      description : 'Username Field'
+    },
+    {
       name : 'fieldStatus',
       label : 'Status Field',
       type : 'textfield',
@@ -60,37 +66,4 @@
       ]
     }
   ]
-},
-  {
-    title: 'User References Table',
-    properties: [
-      {
-        name:'formUserDef',
-        label:'Form ID',
-        description:'Form which is used as user reference for image and name',
-        type:'selectbox',
-        options_ajax:'[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options',
-        required: 'true'
-      },
-      {
-        name : 'fieldUserPrimaryKey',
-        label : 'User Primary Key Field',
-        type : 'textfield',
-        required : 'true',
-        description : '(on user table)'
-      },
-      {
-        name : 'fieldUserForeignKey',
-        label : 'User Foreign Key Field',
-        type : 'textfield',
-        required : 'true',
-        description : '(on audit trail table)'
-      },
-      {
-        name : 'fieldImageSource',
-        label : 'Image Field',
-        type : 'textfield',
-        description : 'Field used as image source'
-      }
-    ]
-  }]
+}]
