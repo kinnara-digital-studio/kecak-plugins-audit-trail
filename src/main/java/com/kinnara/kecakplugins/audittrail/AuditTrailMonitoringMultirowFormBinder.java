@@ -243,7 +243,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             String packageId = appDefinition.getPackageDefinition().getId();
             monitoringOptions.addAll(workflowManager.getProcessList(packageId)
                     .stream()
-                    .flatMap(p -> workflowManager.getProcessVariableDefinitionList(p.getId()).stream())
+                    .map(WorkflowProcess::getId)
+                    .map(workflowManager::getProcessVariableDefinitionList)
+                    .flatMap(Collection::stream)
                     .map(WorkflowVariable::getId)
                     .distinct()
                     .sorted()
