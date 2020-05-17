@@ -94,6 +94,7 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
                         .stream()
                         .collect(FormRow::new, (resultRow, sourceEntry) -> resultRow.put(sourceEntry.getKey(), sourceEntry.getValue()), FormRow::putAll);
                 auditRow.setProperty(getPropertyString("foreignKeyField"), formData.getPrimaryKeyValue());
+                auditRow.setTempFilePathMap(sourceRow.getTempFilePathMap());
                 resultRowSet.add(auditRow);
             }, FormRowSet::addAll);
 
