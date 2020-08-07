@@ -75,7 +75,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
         WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
 
-        return workflowProcessLinkDao.getLinks(primaryKey).stream()
+        FormRowSet rowSet = workflowProcessLinkDao.getLinks(primaryKey).stream()
                 .filter(Objects::nonNull)
                 .flatMap(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null).stream())
 
@@ -87,15 +87,15 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                     WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) && (
                                             getPropertyString("excludeActivities") == null
                                                     || Arrays.stream(getPropertyString("excludeActivities").split(";"))
-                                                            .filter(s -> !s.isEmpty())
-                                                            .noneMatch(id -> id.equals(definition.getId()))
+                                                    .filter(s -> !s.isEmpty())
+                                                    .noneMatch(id -> id.equals(definition.getId()))
                                     )
                             ) || (
                                     WorkflowActivity.TYPE_TOOL.equals(definition.getType()) && (
-                                                            ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && definition.getId().equals(getPropertyString("startProcessTool"))) ||
-                                                                    (getPropertyString("alsoDisplayTools") != null && Arrays.stream(getPropertyString("alsoDisplayTools").split(";"))
-                                                                            .filter(s -> !s.isEmpty())
-                                                                            .anyMatch(id -> id.equals(definition.getId())))
+                                            ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && definition.getId().equals(getPropertyString("startProcessTool"))) ||
+                                                    (getPropertyString("alsoDisplayTools") != null && Arrays.stream(getPropertyString("alsoDisplayTools").split(";"))
+                                                            .filter(s -> !s.isEmpty())
+                                                            .anyMatch(id -> id.equals(definition.getId())))
                                     )
                             );
                 })
@@ -113,7 +113,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     // handle first record, get from process'
                     FormRowSet formRowSet = new FormRowSet();
 
-                    if(!"true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))) {
+                    if (!"true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))) {
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                         WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
                         FormRow row = new FormRow();
@@ -137,9 +137,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
                     FormRow row = new FormRow();
 
-                    if(SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
+                    if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
                         // keep aborted activity first data
-                        if(keepCreatedDate == null)
+                        if (keepCreatedDate == null)
                             keepCreatedDate = info.getCreatedTime();
                         return;
                     }
@@ -153,18 +153,18 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : info.getCreatedTime()));
                     keepCreatedDate = null;
 
-                    if(info.getFinishTime() != null)
+                    if (info.getFinishTime() != null)
                         row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
 
                     row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
-                    if("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
+                    if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                         row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
                         row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
                     } else {
                         row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                        row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[] {info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                        row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
                                 .filter(u -> !u.isEmpty())
                                 .map(this::mapUsernameToFullUsername)
                                 .filter(u -> !u.isEmpty())
@@ -173,11 +173,11 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     }
 
                     Map<String, String> mapPendingValues = new HashMap<>();
-                    Object[] pendingValues = ((Object[])getProperty("pendingValues"));
+                    Object[] pendingValues = ((Object[]) getProperty("pendingValues"));
 
                     // no need to show variables value of current assignment
                     boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
-                    if(!isCurrentAssignment) {
+                    if (!isCurrentAssignment) {
                         row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
                                 .collect(
                                         FormRow::new,
@@ -186,7 +186,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                             formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : String.valueOf(workflowVariable.getVal()));
                                         },
                                         FormRow::putAll));
-                    } else if(pendingValues != null) {
+                    } else if (pendingValues != null) {
                         mapPendingValues.putAll(Arrays.stream(pendingValues)
                                 .map(rows -> (Map<String, Object>) rows)
                                 .collect(
@@ -206,6 +206,10 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     }
                     formRows.add(0, row);
                 }, FormRowSet::addAll);
+
+        rowSet.setMultiRow(true);
+
+        return rowSet;
     }
 
     @Override
