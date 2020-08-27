@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         implements FormLoadBinder, FormLoadMultiRowElementBinder {
@@ -75,9 +76,14 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
         WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
 
-        FormRowSet rowSet = workflowProcessLinkDao.getLinks(primaryKey).stream()
+        FormRowSet rowSet = Optional.of(primaryKey)
+                .map(workflowProcessLinkDao::getLinks)
+                .map(Collection::stream)
+                .orElseGet(Stream::empty)
                 .filter(Objects::nonNull)
-                .flatMap(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null).stream())
+                .map(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null))
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
 
                 // only handle activity
                 .filter(activity -> {
