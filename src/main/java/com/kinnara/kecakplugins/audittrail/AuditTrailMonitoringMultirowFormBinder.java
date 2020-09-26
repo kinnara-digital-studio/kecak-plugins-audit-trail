@@ -88,6 +88,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 // only handle activity
                 .filter(activity -> {
                     final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                    if(definition == null)
+                        return false;
+
                     return
                             (
                                     WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) && (
