@@ -33,12 +33,12 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getName() {
-		return AppPluginUtil.getMessage("auditTrailFormBinder.title", getClassName(), "/messages/AuditTrailFormBinder");
+		return getLabel() + getVersion();
 	}
 	
 	@Override
 	public String getLabel() {
-		return getName();
+		return "(Deprecated) Audit Trail Form Binder";
 	}
 	
 	@Override

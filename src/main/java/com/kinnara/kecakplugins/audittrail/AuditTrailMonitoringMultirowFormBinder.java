@@ -223,7 +223,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getName() {
-        return AppPluginUtil.getMessage("monitoringMultirowFormBinder.title", getClassName(), "/messages/AuditTrailMonitoringMultirowFormBinder");
+        return getLabel() + getVersion();
     }
 
     @Override
@@ -238,7 +238,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getLabel() {
-        return getName();
+        return "Audit Tail Monitoring Multirow Load Binder";
     }
 
     @Override

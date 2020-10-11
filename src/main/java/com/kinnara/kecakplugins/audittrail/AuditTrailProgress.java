@@ -55,7 +55,7 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
 
     @Override
     public String getLabel() {
-        return this.getName();
+        return "Audit Progress List";
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
 
     @Override
     public String getName() {
-        return "Audit Progress List";
+        return getLabel() + getVersion();
     }
 
     @Override

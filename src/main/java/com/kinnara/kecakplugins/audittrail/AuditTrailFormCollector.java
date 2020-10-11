@@ -20,7 +20,7 @@ import org.joget.plugin.base.PluginManager;
 public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 
 	public String getLabel() {
-		return getName();
+		return "(Deprecated) Audit Trail Form Collector";
 	}
 
 	public String getClassName() {
@@ -32,7 +32,7 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getName() {
-		return AppPluginUtil.getMessage("formFieldAuditTrail.title", getClassName(), "/messages/AuditTrailFormCollector");
+		return getLabel() + getVersion();
 	}
 
 	public String getVersion() {

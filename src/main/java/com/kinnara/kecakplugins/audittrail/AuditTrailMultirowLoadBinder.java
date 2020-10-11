@@ -24,7 +24,7 @@ implements FormLoadBinder,
 		FormLoadMultiRowElementBinder{
 
 	public String getLabel() {
-		return getName();
+		return "(Deprecated) Audit Trail Multirow Form Load Binder";
 	}
 
 	public String getClassName() {
@@ -36,7 +36,7 @@ implements FormLoadBinder,
 	}
 
 	public String getName() {
-		return AppPluginUtil.getMessage("auditTrailMultirowLoadBinder.title", getClassName(), "/messages/AuditTrailMultirowLoadBinder");
+		return getLabel() + getVersion();
 	}
 
 	public String getVersion() {
