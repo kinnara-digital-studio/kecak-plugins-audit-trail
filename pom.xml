@@ -5,7 +5,7 @@
     <artifactId>kecak-plugins-audit-trail</artifactId>
     <packaging>bundle</packaging>
     <name>kecak-plugins-audit-trail</name>
-    <url>http://www.kinnarastudio.com</url>
+    <url>http://www.kecak.org</url>
     <version>2.3.2</version>
     <build>
         <plugins>
@@ -104,14 +104,4 @@
 		</dependency>
         <!-- End change plugin specific dependencies here -->
     </dependencies>
-    <distributionManagement>
-        <repository>
-            <id>internal</id>
-            <url>http://dev.joget.org/archiva/repository/internal</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>http://dev.joget.org/archiva/repository/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
