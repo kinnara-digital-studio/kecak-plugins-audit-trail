@@ -5,6 +5,7 @@ import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
+import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.plugin.base.Plugin;
@@ -124,7 +125,11 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
                     if (!"true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))) {
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                        WorkflowProcess info = workflowManager.getRunningProcessInfo(primaryKey);
+                        WorkflowProcess info = Optional.ofNullable(process)
+                                .map(WorkflowProcess::getInstanceId)
+                                .map(workflowManager::getRunningProcessInfo)
+                                .orElse(null);
+
                         FormRow row = new FormRow();
                         row.setProperty(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
                         row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
