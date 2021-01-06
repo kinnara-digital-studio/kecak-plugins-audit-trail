@@ -116,7 +116,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
                 // if property showPendingValue is checked, then display open assignment
                 .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
-                        || !activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN))
+                        || Optional.of(activity).map(WorkflowActivity::getState).map(s -> !s.startsWith(SharkConstants.STATEPREFIX_OPEN)).orElse(false))
 
                 .collect(() -> {
                     // handle first record, get from process'
