@@ -5,6 +5,7 @@
 			{
 				name : 'toolAsStartProcess',
 				label : '@@monitoringMultirowFormBinder.toolAsStartProcess@@',
+				description : '@@monitoringMultirowFormBinder.toolAsStartProcess.desc@@',
 				type : 'checkbox',
 				options : [
 					{

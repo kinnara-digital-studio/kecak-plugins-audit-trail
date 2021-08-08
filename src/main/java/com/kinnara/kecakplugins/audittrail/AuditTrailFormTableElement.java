@@ -3,18 +3,15 @@ package com.kinnara.kecakplugins.audittrail;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.PackageDefinition;
-import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.kecak.apps.form.model.DataJsonControllerHandler;
-import org.kecak.apps.form.model.GridElement;
-import org.kecak.apps.form.service.FormDataUtil;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -23,24 +20,34 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
  * @author Yonathan
  */
 public class AuditTrailFormTableElement extends Element implements FormBuilderPaletteElement, DataJsonControllerHandler {
     @Override
     public String renderTemplate(FormData formData, Map dataModel) {
+        FormUtil.setReadOnlyProperty(this);
+
+        boolean isHidden = ("true".equals(getPropertyString("hiddenWhenReadonly"))
+                && FormUtil.isReadonly(this.getParent(), formData)) ||
+                ("true".equals(getPropertyString("hiddenWhenAsSubform"))
+                        && FormUtil.findRootForm(this) != null
+                        && FormUtil.findRootForm(this).getParent() != null);
+        dataModel.put("hidden", isHidden);
+
+        if(isHidden) {
+            return "";
+        }
+
         AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
 
-    	FormUtil.setReadOnlyProperty(this);
-    	
         String template = "AuditTrailFormElement.ftl";
-        
+
         dataModel.put("className", getClassName());
-        
+
         // Data tables datas container
         List<List<String>> datas = new ArrayList<>();
         List<String> headers = new ArrayList<>();
-        
+
         // Column id container
         List<String> columnList = new ArrayList<>();
         Map<String, String>[] columnProperties = getColumnProperties();
@@ -53,42 +60,36 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         }
 
         FormRowSet rowSet = formData.getLoadBinderData(this);
-        if(rowSet != null) {
-	    	for(FormRow row : rowSet) {
-	    		List<String> contentList = new ArrayList<>();
-	            for(int i = 0, size = columnList.size(); i < size;i++){
-	                String columnName = columnList.get(i);
-	                String value = row.getProperty(columnName);
-	                contentList.add(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-	            }
-	            datas.add(contentList);
-	    	}
+        if (rowSet != null) {
+            for (FormRow row : rowSet) {
+                List<String> contentList = new ArrayList<>();
+                for (int i = 0, size = columnList.size(); i < size; i++) {
+                    String columnName = columnList.get(i);
+                    String value = row.getProperty(columnName);
+                    contentList.add(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                }
+                datas.add(contentList);
+            }
         }
-        
-        Object[] sortBy = (Object[])getProperty("sortBy");  	
-        if(sortBy != null && sortBy.length > 0) {
+
+        Object[] sortBy = (Object[]) getProperty("sortBy");
+        if (sortBy != null && sortBy.length > 0) {
             dataModel.put("sort", translateSoryBy(sortBy));
         }
-        
+
         dataModel.put("datas", datas);
         dataModel.put("error", false);
-        dataModel.put("hidden",
-                ("true".equals(getPropertyString("hiddenWhenReadonly"))
-                        && FormUtil.isReadonly(this, formData)) ||
-                ("true".equals(getPropertyString("hiddenWhenAsSubform"))
-                        && FormUtil.findRootForm(this) != null
-                        && FormUtil.findRootForm(this).getParent() != null) );
-        
+
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
         return html;
     }
-    
+
     private List<Map<String, String>> translateSoryBy(Object[] sortBy) {
-    	List<Map<String, String>> result = new ArrayList<Map<String, String>>();
-    	for(Object o : sortBy) {
-    		result.add((Map<String, String>) o);
-    	}
-    	return result;
+        List<Map<String, String>> result = new ArrayList<Map<String, String>>();
+        for (Object o : sortBy) {
+            result.add((Map<String, String>) o);
+        }
+        return result;
     }
 
     @Override
@@ -98,7 +99,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
     @Override
     public String getVersion() {
-    	return getClass().getPackage().getImplementationVersion();
+        return getClass().getPackage().getImplementationVersion();
     }
 
     @Override
@@ -128,7 +129,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
         WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
         AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        if(workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
+        if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
             PackageDefinition packageDefinition = appDefinition.getPackageDefinition();
             String packageId = packageDefinition.getId();
             long packageVersion = packageDefinition.getVersion();
@@ -153,7 +154,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
                 AuditTrailMonitoringMultirowFormBinder.class.getName(),
                 new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
         };
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", args , true, "/messages/AuditTrailFormElement");
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", args, true, "/messages/AuditTrailFormElement");
     }
 
     public String getFormBuilderCategory() {
@@ -194,7 +195,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
                 .map(o -> (Object[]) o)
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
-                .map(o -> (Map<String, String>)o)
+                .map(o -> (Map<String, String>) o)
                 .map(r -> {
                     Map<String, Object> m = new HashMap<>();
                     r.forEach((k, v) -> m.put(String.valueOf(k), v));

@@ -2,7 +2,6 @@ package com.kinnara.kecakplugins.audittrail;
 
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;
-import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.commons.util.LogUtil;
@@ -69,13 +68,13 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         final Map<String, Date> startTime = new HashMap<>();
 
         // do not load data for empty primary key
-        if(primaryKey == null || primaryKey.isEmpty()) {
+        if (primaryKey == null || primaryKey.isEmpty()) {
             return null;
         }
 
         ApplicationContext appContext = AppUtil.getApplicationContext();
         WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
-        WorkflowManager workflowManager = (WorkflowManager)appContext.getBean("workflowManager");
+        WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
 
         FormRowSet rowSet = Optional.of(primaryKey)
                 .map(workflowProcessLinkDao::getLinks)
@@ -89,25 +88,11 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 // only handle activity
                 .filter(activity -> {
                     final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
-                    if(definition == null)
+                    if (definition == null)
                         return false;
 
-                    return
-                            (
-                                    WorkflowActivity.TYPE_NORMAL.equals(definition.getType()) && (
-                                            getPropertyString("excludeActivities") == null
-                                                    || Arrays.stream(getPropertyString("excludeActivities").split(";"))
-                                                    .filter(s -> !s.isEmpty())
-                                                    .noneMatch(id -> id.equals(definition.getId()))
-                                    )
-                            ) || (
-                                    WorkflowActivity.TYPE_TOOL.equals(definition.getType()) && (
-                                            ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && definition.getId().equals(getPropertyString("startProcessTool"))) ||
-                                                    (getPropertyString("alsoDisplayTools") != null && Arrays.stream(getPropertyString("alsoDisplayTools").split(";"))
-                                                            .filter(s -> !s.isEmpty())
-                                                            .anyMatch(id -> id.equals(definition.getId())))
-                                    )
-                            );
+                    return (isActivity(definition) && !isInExcludedActivity(definition))
+                            || (isTool(definition) && (isToolAsStartProcess() && isStartProcessTool(definition) || isInAlsoDisplayTools(definition)));
                 })
 
                 // only show unaborted activity
@@ -120,10 +105,10 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         || Optional.of(activity).map(WorkflowActivity::getState).map(s -> !s.startsWith(SharkConstants.STATEPREFIX_OPEN)).orElse(false))
 
                 .collect(() -> {
-                    // handle first record, get from process'
+                    // handle first record, get from process
                     FormRowSet formRowSet = new FormRowSet();
 
-                    if (!"true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"))) {
+                    if (!isToolAsStartProcess()) {
                         WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                         WorkflowProcess info = Optional.ofNullable(process)
                                 .map(WorkflowProcess::getInstanceId)
@@ -257,7 +242,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
         WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
         AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        if(workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
+        if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
             String packageId = appDefinition.getPackageDefinition().getId();
             monitoringOptions.addAll(workflowManager.getProcessList(packageId)
                     .stream()
@@ -279,52 +264,55 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         JSONObject startProcessToolProperty = new JSONObject();
         try {
             startProcessToolProperty.put("name", "startProcessTool");
-            startProcessToolProperty.put("label","@@monitoringMultirowFormBinder.startProcessTool@@");
+            startProcessToolProperty.put("label", "@@monitoringMultirowFormBinder.startProcessTool@@");
             startProcessToolProperty.put("control_field", "toolAsStartProcess");
             startProcessToolProperty.put("control_value", "true");
-            startProcessToolProperty.put("required", "true");
+//            startProcessToolProperty.put("required", "true");
 
-            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
                 String appId = appDefinition.getAppId();
                 String appVersion = appDefinition.getVersion().toString();
 
-                startProcessToolProperty.put("type","selectbox");
-                startProcessToolProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
+                startProcessToolProperty.put("type", "selectbox");
+                startProcessToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
             } else {
-                startProcessToolProperty.put("type","textfield");
+                startProcessToolProperty.put("type", "textfield");
             }
-        } catch (JSONException ignored) { }
+        } catch (JSONException ignored) {
+        }
 
         JSONObject alsoDislpayToolProperty = new JSONObject();
         try {
             alsoDislpayToolProperty.put("name", "alsoDisplayTools");
             alsoDislpayToolProperty.put("label", "@@monitoringMultirowFormBinder.alsoDisplayTools@@");
-            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
                 String appId = appDefinition.getAppId();
                 String appVersion = appDefinition.getVersion().toString();
                 alsoDislpayToolProperty.put("type", "multiselect");
-                alsoDislpayToolProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
+                alsoDislpayToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
             } else {
                 alsoDislpayToolProperty.put("type", "textfield");
                 alsoDislpayToolProperty.put("description", "@@monitoringMultirowFormBinder.alsoDisplayTools.desc@@");
             }
 
-        } catch (JSONException ignored) { }
+        } catch (JSONException ignored) {
+        }
 
         JSONObject excludeActivityProperty = new JSONObject();
         try {
             excludeActivityProperty.put("name", "excludeActivities");
             excludeActivityProperty.put("label", "@@monitoringMultirowFormBinder.excludeActivities@@");
-            if(appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
+            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
                 String appId = appDefinition.getAppId();
                 String appVersion = appDefinition.getVersion().toString();
                 excludeActivityProperty.put("type", "multiselect");
-                excludeActivityProperty.put("options_ajax","[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId="+appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_NORMAL);
+                excludeActivityProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_NORMAL);
             } else {
                 excludeActivityProperty.put("type", "textfield");
                 excludeActivityProperty.put("description", "@@monitoringMultirowFormBinder.excludeActivities.desc@@");
             }
-        } catch (JSONException ignored) { }
+        } catch (JSONException ignored) {
+        }
 
         String[] args = {
                 startProcessToolProperty.toString().replaceAll("\"", "'"),
@@ -341,13 +329,61 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         return plugin != null;
     }
 
-    private String mapUsernameToFullUsername(String u)  {
-        ExtDirectoryManager directoryManager = (ExtDirectoryManager)AppUtil.getApplicationContext().getBean("directoryManager");
+    private String mapUsernameToFullUsername(String u) {
+        ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
         User user = directoryManager.getUserByUsername(u);
-        if(user == null){
+        if (user == null) {
             return u;
         } else {
             return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
         }
+    }
+
+    protected boolean isActivity(WorkflowActivity activityDefinition) {
+        return WorkflowActivity.TYPE_NORMAL.equals(activityDefinition.getType());
+    }
+
+    protected boolean isTool(WorkflowActivity activityDefinition) {
+        return WorkflowActivity.TYPE_TOOL.equals(activityDefinition.getType());
+    }
+
+    protected Collection<String> getExcludeActivities() {
+        return getMultivalueProperty("excludeActivities");
+    }
+
+    protected Collection<String> getStartProcessTool() {
+        return getMultivalueProperty("startProcessTool");
+    }
+
+    protected Collection<String> getAlsoDisplayTools() {
+        return getMultivalueProperty("alsoDisplayTools");
+    }
+
+    protected boolean isInExcludedActivity(WorkflowActivity activityDefinition) {
+        Collection<String> excludedActivities = getExcludeActivities();
+        return excludedActivities.stream().anyMatch(s -> s.equals(activityDefinition.getId()));
+    }
+
+    protected boolean isToolAsStartProcess() {
+        return "true".equalsIgnoreCase(getPropertyString("toolAsStartProcess"));
+    }
+
+    protected boolean isStartProcessTool(WorkflowActivity activityDefinition) {
+        return getStartProcessTool().stream().anyMatch(s -> s.equals(activityDefinition.getId()));
+    }
+
+    protected boolean isInAlsoDisplayTools(WorkflowActivity activityDefinition) {
+        return getAlsoDisplayTools().stream().anyMatch(id -> id.equals(activityDefinition.getId()));
+    }
+
+    protected Collection<String> getMultivalueProperty(String propertyName) {
+        return Optional.of(propertyName)
+                .map(this::getPropertyString)
+                .map(s -> s.split(";"))
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 }
