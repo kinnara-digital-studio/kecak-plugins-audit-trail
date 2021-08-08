@@ -1,6 +1,5 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
@@ -9,9 +8,7 @@ import org.joget.apps.form.service.FormUtil;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
-import org.json.JSONObject;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
@@ -204,38 +201,5 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
     public String getField(Map<String, String> map) {
         return map.get("columnId");
-    }
-
-    @Override
-    public Object handleElementValueResponse(Element element, FormData formData) {
-        final FormRowSet rowSet = formData.getLoadBinderData(element);
-        return Optional.ofNullable(rowSet)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
-                .map(this::collectGridElement)
-                .collect(JSONCollectors.toJSONArray());
-    }
-
-    protected JSONObject collectGridElement(@Nonnull FormRow row) {
-        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        final Map<String, String>[] columnProperties = getColumnProperties();
-
-        final JSONObject jsonObject = Optional.ofNullable(columnProperties)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
-                .collect(JSONCollectors.toJSONObject(this::getField, props -> {
-                    final String primaryKey = Optional.of(row).map(FormRow::getId).orElse("");
-                    final String columnName = Optional.of(props)
-                            .map(this::getField)
-                            .orElse("");
-
-                    return Optional.of(columnName)
-                            .filter(s -> !s.isEmpty())
-                            .map(row::getProperty)
-                            .map(s -> formatColumn(columnName, props, primaryKey, s, appDefinition.getAppId(), appDefinition.getVersion(), ""))
-                            .orElse(null);
-                }));
-
-        return jsonObject;
     }
 }
