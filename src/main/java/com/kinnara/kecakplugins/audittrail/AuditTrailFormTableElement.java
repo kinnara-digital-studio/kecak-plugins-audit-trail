@@ -6,12 +6,10 @@ import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.kecak.apps.form.model.DataJsonControllerHandler;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -22,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * @author Yonathan
  */
-public class AuditTrailFormTableElement extends Element implements FormBuilderPaletteElement, DataJsonControllerHandler {
+public class AuditTrailFormTableElement extends Element implements FormBuilderPaletteElement {
     @Override
     public String renderTemplate(FormData formData, Map dataModel) {
         FormUtil.setReadOnlyProperty(this);
