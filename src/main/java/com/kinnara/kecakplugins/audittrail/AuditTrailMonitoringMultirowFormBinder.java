@@ -29,16 +29,16 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     public enum Fields {
 
-        ID("id", "ID"),
-        PROCESS_ID("processId", "Process ID"),
-        PROCESS_NAME("processName", "Process Name"),
-        ACTIVITY_ID("activityId", "Activity ID"),
-        ACTIVITY_NAME("activityName", "Activity Name"),
-        CREATED_TIME("createdTime", "Created Time"),
-        FINISH_TIME("finishTime", "Finish Time"),
-        USERNAME("username", "Username"),
-        USER_FULLNAME("userFullname", "User Full Name"),
-        PARTICIPANT("participantId", "Participant");
+        ID("_id", "ID"),
+        PROCESS_ID("_processId", "Process ID"),
+        PROCESS_NAME("_processName", "Process Name"),
+        ACTIVITY_ID("_activityId", "Activity ID"),
+        ACTIVITY_NAME("_activityName", "Activity Name"),
+        CREATED_TIME("_createdTime", "Created Time"),
+        FINISH_TIME("_finishTime", "Finish Time"),
+        USERNAME("_username", "Username"),
+        USER_FULLNAME("_userFullname", "User Full Name"),
+        PARTICIPANT("_participantId", "Participant");
 
         private String name;
         private String label;
@@ -115,7 +115,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                 .orElse(null);
 
                         FormRow row = new FormRow();
-                        row.setProperty(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.setId(process == null || process.getId() == null ? "" : process.getId());
+                        row.setProperty(Fields.ID.toString(), row.getId());
                         row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
                         row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
                         row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
@@ -142,7 +143,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         return;
                     }
 
-                    row.setProperty(Fields.ID.toString(), activity.getId());
+                    row.setId(activity.getId());
+                    row.setProperty(Fields.ID.toString(), row.getId());
                     row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
                     row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
                     row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
@@ -154,20 +156,22 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     if (info.getFinishTime() != null)
                         row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
 
-                    row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
+                    if(isActivity(definition)) {
+                        row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
-                    if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
-                        WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                        row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
-                        row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
-                    } else {
-                        row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                        row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
-                                .filter(u -> !u.isEmpty())
-                                .map(this::mapUsernameToFullUsername)
-                                .filter(u -> !u.isEmpty())
-                                .collect(Collectors.joining(","))
-                        );
+                        if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
+                            WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                            row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
+                            row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                        } else {
+                            row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
+                            row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                    .filter(u -> !u.isEmpty())
+                                    .map(this::mapUsernameToFullUsername)
+                                    .filter(u -> !u.isEmpty())
+                                    .collect(Collectors.joining(","))
+                            );
+                        }
                     }
 
                     Map<String, String> mapPendingValues = new HashMap<>();
