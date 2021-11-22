@@ -20,6 +20,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(AuditTrailFormCollector.class.getName(), new AuditTrailFormCollector(), null));
         registrationList.add(context.registerService(AuditTrailMonitoringMultirowFormBinder.class.getName(), new AuditTrailMonitoringMultirowFormBinder(), null));
         registrationList.add(context.registerService(AuditTrailProgress.class.getName(), new AuditTrailProgress(), null));
+        registrationList.add(context.registerService(AuditTrailAceFormElement.class.getName(), new AuditTrailAceFormElement(), null));
     }
 
     public void stop(BundleContext context) {
