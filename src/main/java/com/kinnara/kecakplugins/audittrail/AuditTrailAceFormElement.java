@@ -17,7 +17,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getFormBuilderTemplate() {
-		return "<label class='label'>Auditrail ACE Treeview</label>";
+		return "<label class='label'>Auditrail ACE Timeline</label>";
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getName() {
-		return "Auditrail ACE";
+		return "Auditrail ACE Element";
 	}
 
 	@Override

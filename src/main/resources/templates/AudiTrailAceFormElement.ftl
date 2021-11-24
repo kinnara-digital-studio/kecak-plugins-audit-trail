@@ -1,6 +1,6 @@
 <#if includeMetaData!>
 <div class="form-cell" ${elementMetaData!}>
-    <label class="label">${element.properties.label} Auditrail Ace Treeview</label>
+    <label class="label">${element.properties.label} Auditrail Ace Timeline</label>
 </div>
 <#else>
 <div class="form-cell widget-box" ${elementMetaData!}>
