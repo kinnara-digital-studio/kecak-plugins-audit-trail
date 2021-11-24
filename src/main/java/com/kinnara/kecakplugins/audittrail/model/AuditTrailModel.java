@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.auditrail.model;
+package com.kinnara.kecakplugins.audittrail.model;
 
 public class AuditTrailModel {
 	private String id;

@@ -13,7 +13,7 @@
 	<div class="widget-body">
 		<div class="widget-main no-padding">
 			<div class="dialogs">
-				<#list auditrailData! as data>
+				<#list datas! as data>
 					<div class="itemdiv dialogdiv">
 						<div class="user">
 							<img alt="Alexa's Avatar" src="${request.contextPath}/plugin/${className}/images/default-avatar.png" />
@@ -26,9 +26,9 @@
 							</div>
 	
 							<div class="name">
-								<a href="#">Alexa</a>
+								<a href="#">${data.performer!}</a>
 							</div>
-							<div class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque commodo massa sed ipsum porttitor facilisis.</div>
+							<div class="text">${data.status!}</div>
 	
 							<div class="tools">
 								<a href="#" class="btn btn-minier btn-info">
