@@ -43,10 +43,7 @@
 
 				<div class="widget-body">
 					<div class="widget-main">
-						Anim pariatur cliche reprehenderit, enim eiusmod
-						<span class="red">high life</span>
-
-						accusamus terry richardson ad squid &hellip;
+						${data.status!}
 						<!--<div class="space-6"></div>
 
 						<div class="widget-toolbox clearfix">

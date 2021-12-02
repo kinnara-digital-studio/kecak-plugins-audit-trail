@@ -153,7 +153,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                     
                     if(columnName.equals("_finishTime")) {
                     	audit.setDate(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                    }else if(columnName.equals("status")) {
+                    }else if(columnName.equals("statusTimeline")) {
                     	audit.setStatus(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
                     }else if(columnName.equals("_userFullname")) {
                     	audit.setPerformer(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));

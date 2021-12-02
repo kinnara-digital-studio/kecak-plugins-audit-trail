@@ -13,9 +13,7 @@ public class AuditTrailModel {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public String getPerformer() {
-		return performer;
-	}
+	public String getPerformer() {return performer;}
 	public void setPerformer(String performer) {
 		this.performer = performer;
 	}
@@ -43,6 +41,8 @@ public class AuditTrailModel {
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
-	
+
+
+
 	
 }
