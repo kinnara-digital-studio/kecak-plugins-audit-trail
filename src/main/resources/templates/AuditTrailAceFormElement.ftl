@@ -27,7 +27,7 @@
 
 					<span class="widget-toolbar no-border">
 						<i class="ace-icon fa fa-clock-o bigger-110"></i>
-						16:22
+						14:30
 					</span>
 
 					<span class="widget-toolbar">

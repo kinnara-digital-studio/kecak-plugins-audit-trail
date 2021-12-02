@@ -15,7 +15,7 @@
         type : 'textfield'
       }, {
         name : 'height',
-        label : '@@auditTrailAce.label@@',
+        label : '@@auditTrailAce.height@@',
         type : 'textfield'
       }, {
           name : 'loadBinder',
