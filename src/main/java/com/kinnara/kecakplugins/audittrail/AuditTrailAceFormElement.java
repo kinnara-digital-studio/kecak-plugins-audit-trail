@@ -96,7 +96,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getFormBuilderCategory() {
-		return "Kecak Enterprise";
+		return "Kecak";
 	}
 
 	@Override
@@ -128,8 +128,8 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
         dataModel.put("className", getClassName());
 
         // Data tables datas container
-        List<AuditTrailModel> datas = new ArrayList<>();
-        List<String> headers = new ArrayList<>();
+        final List<AuditTrailModel> datum = new ArrayList<>();
+        final List<String> headers = new ArrayList<>();
 
         // Column id container
         List<String> columnList = new ArrayList<>();
@@ -142,25 +142,16 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             dataModel.put("headers", headers);
         }
 
-        FormRowSet rowSet = formData.getLoadBinderData(this);
+        final FormRowSet rowSet = formData.getLoadBinderData(this);
         if (rowSet != null) {
+            final String variableNote = getPropertyString("variableNote");
             for (FormRow row : rowSet) {
-            	AuditTrailModel audit = new AuditTrailModel();
-                List<String> contentList = new ArrayList<>();
-                for (int i = 0, size = columnList.size(); i < size; i++) {
-                    String columnName = columnList.get(i);
-                    String value = row.getProperty(columnName);
-                    
-                    if(columnName.equals("_finishTime")) {
-                    	audit.setDate(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                    }else if(columnName.equals("statusTimeline")) {
-                    	audit.setStatus(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                    }else if(columnName.equals("_userFullname")) {
-                    	audit.setPerformer(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                    }
-                    
-                }
-                datas.add(audit);
+            	final AuditTrailModel audit = new AuditTrailModel();
+                audit.setId(row.getId());
+                audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                audit.setDate(formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty(variableNote), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                datum.add(audit);
             }
         }
 
@@ -169,7 +160,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             dataModel.put("sort", translateSoryBy(sortBy));
         }
 
-        dataModel.put("datas", datas);
+        dataModel.put("datas", datum);
         dataModel.put("error", false);
 
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);

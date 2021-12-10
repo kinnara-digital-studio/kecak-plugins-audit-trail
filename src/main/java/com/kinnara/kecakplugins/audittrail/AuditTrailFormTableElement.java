@@ -10,6 +10,7 @@ import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.kecak.apps.form.model.AceFormElement;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -43,12 +44,13 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         dataModel.put("className", getClassName());
 
         // Data tables datas container
-        List<List<String>> datas = new ArrayList<>();
-        List<String> headers = new ArrayList<>();
+        final List<List<String>> datas = new ArrayList<>();
+        final List<String> headers = new ArrayList<>();
 
         // Column id container
-        List<String> columnList = new ArrayList<>();
-        Map<String, String>[] columnProperties = getColumnProperties();
+        final List<String> columnList = new ArrayList<>();
+        final Map<String, String>[] columnProperties = getColumnProperties();
+
         if (columnProperties != null && columnProperties.length > 0) {
             for (Map<String, String> headerProp : columnProperties) {
                 columnList.add(getField(headerProp));
@@ -57,20 +59,20 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
             dataModel.put("headers", headers);
         }
 
-        FormRowSet rowSet = formData.getLoadBinderData(this);
+        final FormRowSet rowSet = formData.getLoadBinderData(this);
         if (rowSet != null) {
             for (FormRow row : rowSet) {
                 List<String> contentList = new ArrayList<>();
                 for (int i = 0, size = columnList.size(); i < size; i++) {
-                    String columnName = columnList.get(i);
-                    String value = row.getProperty(columnName);
+                    final String columnName = columnList.get(i);
+                    final String value = row.getProperty(columnName);
                     contentList.add(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 }
                 datas.add(contentList);
             }
         }
 
-        Object[] sortBy = (Object[]) getProperty("sortBy");
+        final Object[] sortBy = (Object[]) getProperty("sortBy");
         if (sortBy != null && sortBy.length > 0) {
             dataModel.put("sort", translateSoryBy(sortBy));
         }
@@ -80,6 +82,11 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
         return html;
+    }
+
+    @Override
+    public String renderAceTemplate(FormData formData, Map dataModel) {
+        return super.renderAceTemplate(formData, dataModel);
     }
 
     private List<Map<String, String>> translateSoryBy(Object[] sortBy) {

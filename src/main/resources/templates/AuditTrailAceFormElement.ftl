@@ -22,12 +22,12 @@
 				<div class="widget-header widget-header-small">
 					<h5 class="widget-title smaller">
 						<a href="#" class="blue">${data.performer!}</a>
-						<span class="grey">${data.status!}</span>
+						<span class="grey"></span>
 					</h5>
 
 					<span class="widget-toolbar no-border">
 						<i class="ace-icon fa fa-clock-o bigger-110"></i>
-						14:30
+						${data.date!}
 					</span>
 
 					<span class="widget-toolbar">
@@ -43,7 +43,7 @@
 
 				<div class="widget-body">
 					<div class="widget-main">
-						${data.status!}
+						${data.comment!}
 						<!--<div class="space-6"></div>
 
 						<div class="widget-toolbox clearfix">
