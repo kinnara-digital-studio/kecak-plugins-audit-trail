@@ -9,6 +9,7 @@ import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.plugin.base.Plugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowActivity;
+import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
@@ -18,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
+import javax.annotation.Nonnull;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -71,11 +73,11 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             return null;
         }
 
-        ApplicationContext appContext = AppUtil.getApplicationContext();
-        WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
-        WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
 
-        FormRowSet rowSet = Optional.of(primaryKey)
+        final FormRowSet rowSet = Optional.of(primaryKey)
                 .map(workflowProcessLinkDao::getLinks)
                 .map(Collection::stream)
                 .orElseGet(Stream::empty)
@@ -105,16 +107,16 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
                 .collect(() -> {
                     // handle first record, get from process
-                    FormRowSet formRowSet = new FormRowSet();
+                    final FormRowSet formRowSet = new FormRowSet();
 
                     if (!isToolAsStartProcess()) {
-                        WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                        WorkflowProcess info = Optional.ofNullable(process)
+                        final WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                        final WorkflowProcess info = Optional.ofNullable(process)
                                 .map(WorkflowProcess::getInstanceId)
                                 .map(workflowManager::getRunningProcessInfo)
                                 .orElse(null);
 
-                        FormRow row = new FormRow();
+                        final FormRow row = new FormRow();
                         row.setId(process == null || process.getId() == null ? "" : process.getId());
                         row.setProperty(Fields.ID.toString(), row.getId());
                         row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
@@ -126,15 +128,17 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
                         row.setProperty(Fields.USER_FULLNAME.toString(), process == null || process.getRequesterId() == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
 
-                        // get first process
+                        final Map<String, String> startProcessValues = getStartProcessValues();
+                        startProcessValues.forEach(row::setProperty);
 
+                        // put first process
                         formRowSet.add(row);
                     }
                     return formRowSet;
                 }, (formRows, activity) -> {
-                    WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
-                    WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
-                    FormRow row = new FormRow();
+                    final WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
+                    final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                    final FormRow row = new FormRow();
 
                     if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
                         // keep aborted activity first data
@@ -174,8 +178,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         }
                     }
 
-                    Map<String, String> mapPendingValues = new HashMap<>();
-                    Object[] pendingValues = ((Object[]) getProperty("pendingValues"));
+                    final Map<String, String> mapPendingValues = new HashMap<>();
+                    final Map<String, String> pendingValues = getPendingValues();
 
                     // no need to show variables value of current assignment
                     boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
@@ -188,15 +192,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                             formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : String.valueOf(workflowVariable.getVal()));
                                         },
                                         FormRow::putAll));
-                    } else if (pendingValues != null) {
-                        mapPendingValues.putAll(Arrays.stream(pendingValues)
-                                .map(rows -> (Map<String, Object>) rows)
-                                .collect(
-                                        HashMap::new,
-                                        (hashMap, rows) -> hashMap.put(String.valueOf(rows.get("columnId")),
-                                                String.valueOf(AppUtil.processHashVariable(String.valueOf(rows.get("columnValue")), null, null, null))),
-                                        Map::putAll));
-
+                    } else {
+                        mapPendingValues.putAll(pendingValues);
                         row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
                                 .collect(
                                         FormRow::new,
@@ -241,10 +238,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getPropertyOptions() {
-        List<Map<String, String>> monitoringOptions = new ArrayList<>();
-
-        WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-        AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        final List<Map<String, String>> monitoringOptions = new ArrayList<>();
+        final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
         if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
             String packageId = appDefinition.getPackageDefinition().getId();
             monitoringOptions.addAll(workflowManager.getProcessList(packageId)
@@ -318,6 +314,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         }
 
         String[] args = {
+                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
                 startProcessToolProperty.toString().replaceAll("\"", "'"),
                 new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
                 alsoDislpayToolProperty.toString().replaceAll("\"", "'"),
@@ -388,5 +385,22 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     *
+     * @return
+     */
+    @Nonnull
+    protected Map<String, String> getStartProcessValues() {
+        return Arrays.stream((Object[])getProperty("startProcessValues"))
+                .map(o -> (Map<String, Object>)o)
+                .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
+    }
+
+    protected Map<String, String> getPendingValues() {
+        return Arrays.stream((Object[])getProperty("pendingValues"))
+                .map(o -> (Map<String, Object>) o)
+                .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
     }
 }

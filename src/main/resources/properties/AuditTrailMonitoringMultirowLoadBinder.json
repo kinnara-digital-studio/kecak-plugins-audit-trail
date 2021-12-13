@@ -14,6 +14,25 @@
 					}
 				]
 			},
+			{
+				name : 'startProcessValues',
+				label : '@@monitoringMultirowFormBinder.startProcessValues@@',
+				type : 'grid',
+				control_field : 'toolAsStartProcess',
+				control_value : '',
+				columns : [
+					{
+						key : 'columnId',
+						label : '@@monitoringMultirowFormBinder.columns.id@@',
+						required : 'true',
+						options : %s
+					},
+					{
+						key : 'columnValue',
+						label : '@@monitoringMultirowFormBinder.columns.value@@',
+					}
+				]
+			},
 			%s,
 			{
 				name : 'showPendingValue',
