@@ -16,6 +16,7 @@ import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
@@ -147,10 +148,11 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             final String variableNote = getPropertyString("variableNote");
             for (FormRow row : rowSet) {
             	final AuditTrailModel audit = new AuditTrailModel();
+                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
                 audit.setId(row.getId());
                 audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 audit.setDate(formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty(variableNote), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty("statusTimeline"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 datum.add(audit);
             }
         }
