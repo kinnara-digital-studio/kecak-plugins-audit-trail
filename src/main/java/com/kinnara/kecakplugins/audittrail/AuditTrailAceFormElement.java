@@ -26,12 +26,12 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getFormBuilderTemplate() {
-		return "<label class='label'>Auditrail ACE Timeline</label>";
+		return "<label class='label'>" + getLabel() + "</label>";
 	}
 
 	@Override
 	public String getLabel() {
-		return this.getName();
+		return getName();
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getPropertyOptions() {
-		List<Map<String, String>> monitoringOptions = Arrays.stream(AuditTrailMonitoringMultirowFormBinder.Fields.values())
+		final List<Map<String, String>> monitoringOptions = Arrays.stream(AuditTrailMonitoringMultirowFormBinder.Fields.values())
                 .collect(ArrayList::new, (list, field) -> {
                     Map<String, String> map = new HashMap<>();
                     map.put("value", field.toString());
@@ -52,8 +52,8 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
         WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
         AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
         if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
-            PackageDefinition packageDefinition = appDefinition.getPackageDefinition();
-            String packageId = packageDefinition.getId();
+            final PackageDefinition packageDefinition = appDefinition.getPackageDefinition();
+            final String packageId = packageDefinition.getId();
             long packageVersion = packageDefinition.getVersion();
             monitoringOptions.addAll(workflowManager.getProcessList(packageId, String.valueOf(packageVersion))
                     .stream()
@@ -70,7 +70,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                     .collect(Collectors.toCollection(ArrayList::new)));
         }
 
-        String[] args = {
+        final String[] args = {
                 AuditTrailMultirowLoadBinder.class.getName(),
                 AuditTrailMonitoringMultirowFormBinder.class.getName(),
                 AuditTrailMonitoringMultirowFormBinder.class.getName(),
@@ -81,7 +81,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getName() {
-		return "Auditrail ACE Element";
+		return "Auditrail Ace Element";
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getDescription() {
-		return "Kecak Plugins; Artifact ID : " + getClass().getPackage().getImplementationTitle() + "; Treeview Auditrail in ACE Theme";
+		return getClass().getPackage().getImplementationTitle();
 	}
 
 	@Override
@@ -132,8 +132,8 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
         final List<String> headers = new ArrayList<>();
 
         // Column id container
-        List<String> columnList = new ArrayList<>();
-        Map<String, String>[] columnProperties = getColumnProperties();
+        final List<String> columnList = new ArrayList<>();
+        final Map<String, String>[] columnProperties = getColumnProperties();
         if (columnProperties != null && columnProperties.length > 0) {
             for (Map<String, String> headerProp : columnProperties) {
                 columnList.add(getField(headerProp));

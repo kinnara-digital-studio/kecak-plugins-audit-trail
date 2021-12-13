@@ -44,7 +44,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         dataModel.put("className", getClassName());
 
         // Data tables datas container
-        final List<List<String>> datas = new ArrayList<>();
+        final List<List<String>> data = new ArrayList<>();
         final List<String> headers = new ArrayList<>();
 
         // Column id container
@@ -63,12 +63,11 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         if (rowSet != null) {
             for (FormRow row : rowSet) {
                 List<String> contentList = new ArrayList<>();
-                for (int i = 0, size = columnList.size(); i < size; i++) {
-                    final String columnName = columnList.get(i);
+                for (final String columnName : columnList) {
                     final String value = row.getProperty(columnName);
                     contentList.add(formatColumn(columnName, null, row.getId(), value, appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 }
-                datas.add(contentList);
+                data.add(contentList);
             }
         }
 
@@ -77,7 +76,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
             dataModel.put("sort", translateSoryBy(sortBy));
         }
 
-        dataModel.put("datas", datas);
+        dataModel.put("datas", data);
         dataModel.put("error", false);
 
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
@@ -109,7 +108,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
     @Override
     public String getDescription() {
-        return "Kecak Plugins; Form table element, to get list of approval history for each process; Artifact ID : " + getClass().getPackage().getImplementationTitle();
+        return getClass().getPackage().getImplementationTitle();
     }
 
     @Override

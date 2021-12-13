@@ -115,7 +115,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                 .orElse(null);
 
                         FormRow row = new FormRow();
-                        row.setProperty(Fields.ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                        row.setId(process == null || process.getId() == null ? "" : process.getId());
+                        row.setProperty(Fields.ID.toString(), row.getId());
                         row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
                         row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
                         row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
@@ -142,7 +143,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         return;
                     }
 
-                    row.setProperty(Fields.ID.toString(), activity.getId());
+                    row.setId(activity.getId());
+                    row.setProperty(Fields.ID.toString(), row.getId());
                     row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
                     row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
                     row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
