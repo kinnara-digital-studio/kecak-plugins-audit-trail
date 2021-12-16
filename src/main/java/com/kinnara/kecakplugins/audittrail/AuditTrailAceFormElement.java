@@ -151,7 +151,11 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                 LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
                 audit.setId(row.getId());
                 audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                audit.setDate(formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                String finishTime = formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), "");
+//                if(finishTime.equals("")){
+//                    finishTime="Now";
+//                }
+                audit.setDate(finishTime);
                 audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty("statusTimeline"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 datum.add(audit);
             }
