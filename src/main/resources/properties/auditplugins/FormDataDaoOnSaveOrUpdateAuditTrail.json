@@ -1,0 +1,15 @@
+[
+  {
+    "title": "@@formDataDaoOnSaveOrUpdateAuditTrail.title@@",
+    "properties": [
+      {
+        "name": "auditMessage",
+        "type": "textfield",
+        "label": "@@formDataDaoOnSaveOrUpdateAuditTrail.auditMessage@@",
+        "description": "@@formDataDaoOnSaveOrUpdateAuditTrail.auditMessage.desc@@",
+        "required": "true",
+        "value": "User: {user}, form: {form}, table: {table}, id: {id}, field: {field}, value: {value}"
+      }
+    ]
+  }
+]
