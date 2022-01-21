@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnara.kecakplugins.audittrail.datalist;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
@@ -14,7 +14,6 @@ import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormDataAuditTrail;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.workflow.model.WorkflowAssignment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
@@ -24,8 +23,6 @@ import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,7 +114,7 @@ public class FormDataAuditTrailDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/FormDataAuditTrailDataListBinder.json");
+        return AppUtil.readPluginResource(getClassName(), "/properties/datalist/FormDataAuditTrailDataListBinder.json", null, true, "/messages/datalist/FormDataAuditTrailDataListBinder");
     }
 
     protected DataListFilterQueryObject getFilter(Map<String, Object> properties, DataListFilterQueryObject[] datalistFilters) {

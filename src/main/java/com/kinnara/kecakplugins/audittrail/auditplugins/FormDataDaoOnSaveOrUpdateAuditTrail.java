@@ -1,5 +1,6 @@
 package com.kinnara.kecakplugins.audittrail.auditplugins;
 
+import com.kinnara.kecakplugins.audittrail.AuditTrailUtil;
 import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.service.AppUtil;
@@ -7,7 +8,6 @@ import org.joget.apps.form.dao.FormDataDaoImpl;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.plugin.base.DefaultAuditTrailPlugin;
-import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 
 import java.util.*;
@@ -47,8 +47,7 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
             return null;
         }
 
-        final PluginManager pluginManager = (PluginManager) map.get("pluginManager");
-        final AuditTrailDao auditTrailDao = (AuditTrailDao) pluginManager.getBean("AuditTrailDao");
+        final AuditTrailDao auditTrailDao = AuditTrailUtil.getAuditTrailDao();
 
         final String formId = (String) callerAuditTrail.getArgs()[0];
         final String formTable = (String) callerAuditTrail.getArgs()[1];

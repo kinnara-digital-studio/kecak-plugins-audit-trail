@@ -1,6 +1,6 @@
 [
   {
-    "title": "FormData Audit Trail DataList Binder",
+    "title": "@@formDataAuditTrailDataListBinder@@",
     "properties": [
       {
         "name" :"formDefId",
