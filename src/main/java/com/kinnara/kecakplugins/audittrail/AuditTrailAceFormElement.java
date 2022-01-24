@@ -1,6 +1,5 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -156,14 +155,15 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             final String variableNote = getPropertyString("variableNote");
             for (FormRow row : rowSet) {
             	final AuditTrailModel audit = new AuditTrailModel();
-//                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
+                LogUtil.info(getClassName(),"FinishTime ["+row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString())+"]");
+                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
                 audit.setId(row.getId());
                 audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                String finishTime = formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), "");
-//                if(finishTime.equals("")){
+                String finishTime = row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString());
+//                if(finishTime.isEmpty()){
 //                    finishTime="Now";
 //                }
-                audit.setDate(finishTime);
+                audit.setDate(formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), finishTime, appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty("statusTimeline"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 
                 User user = directoryManager.getUserByUsername(row.getProperty("_username"));

@@ -1,15 +1,17 @@
 package com.kinnara.kecakplugins.audittrail;
 
+import com.kinnara.kecakplugins.audittrail.generators.ActivityOptionsGenerator;
+import com.kinnara.kecakplugins.audittrail.generators.OptionsGenerator;
+import com.kinnarastudio.commons.Try;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
+import org.joget.apps.form.service.FormUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
-import org.joget.plugin.base.Plugin;
-import org.joget.plugin.base.PluginManager;
+import org.joget.plugin.base.PluginWebSupport;
 import org.joget.workflow.model.WorkflowActivity;
-import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
@@ -20,6 +22,10 @@ import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -27,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
-        implements FormLoadBinder, FormLoadMultiRowElementBinder {
+        implements FormLoadBinder, FormLoadMultiRowElementBinder, PluginWebSupport {
 
     public enum Fields {
 
@@ -66,7 +72,6 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
-        final Map<String, Date> startTime = new HashMap<>();
 
         // do not load data for empty primary key
         if (primaryKey == null || primaryKey.isEmpty()) {
@@ -135,7 +140,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         formRowSet.add(row);
                     }
                     return formRowSet;
-                }, (formRows, activity) -> {
+                }, (rows, activity) -> {
                     final WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
                     final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
                     final FormRow row = new FormRow();
@@ -203,7 +208,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                         },
                                         FormRow::putAll));
                     }
-                    formRows.add(0, row);
+                    rows.add(0, row);
                 }, FormRowSet::addAll);
 
         rowSet.setMultiRow(true);
@@ -238,12 +243,12 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getPropertyOptions() {
-        final List<Map<String, String>> monitoringOptions = new ArrayList<>();
+        final List<Map<String, String>> monitoringOptions;
         final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
         final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
         if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
             String packageId = appDefinition.getPackageDefinition().getId();
-            monitoringOptions.addAll(workflowManager.getProcessList(packageId)
+            monitoringOptions = workflowManager.getProcessList(packageId)
                     .stream()
                     .map(WorkflowProcess::getId)
                     .map(workflowManager::getProcessVariableDefinitionList)
@@ -257,59 +262,37 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         map.put("label", v);
                         return map;
                     })
-                    .collect(Collectors.toCollection(ArrayList::new)));
+                    .collect(Collectors.toCollection(ArrayList::new));
+        } else {
+            monitoringOptions = new ArrayList<>();
         }
 
-        JSONObject startProcessToolProperty = new JSONObject();
+        final JSONObject startProcessToolProperty = new JSONObject();
         try {
             startProcessToolProperty.put("name", "startProcessTool");
             startProcessToolProperty.put("label", "@@monitoringMultirowFormBinder.startProcessTool@@");
             startProcessToolProperty.put("control_field", "toolAsStartProcess");
             startProcessToolProperty.put("control_value", "true");
-//            startProcessToolProperty.put("required", "true");
-
-            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
-                String appId = appDefinition.getAppId();
-                String appVersion = appDefinition.getVersion().toString();
-
-                startProcessToolProperty.put("type", "selectbox");
-                startProcessToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
-            } else {
-                startProcessToolProperty.put("type", "textfield");
-            }
+            startProcessToolProperty.put("type", "selectbox");
+            startProcessToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/" + getClassName() + "/service?type=" + WorkflowActivity.TYPE_TOOL);
         } catch (JSONException ignored) {
         }
 
-        JSONObject alsoDislpayToolProperty = new JSONObject();
+        final JSONObject alsoDislpayToolProperty = new JSONObject();
         try {
             alsoDislpayToolProperty.put("name", "alsoDisplayTools");
             alsoDislpayToolProperty.put("label", "@@monitoringMultirowFormBinder.alsoDisplayTools@@");
-            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
-                String appId = appDefinition.getAppId();
-                String appVersion = appDefinition.getVersion().toString();
-                alsoDislpayToolProperty.put("type", "multiselect");
-                alsoDislpayToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_TOOL);
-            } else {
-                alsoDislpayToolProperty.put("type", "textfield");
-                alsoDislpayToolProperty.put("description", "@@monitoringMultirowFormBinder.alsoDisplayTools.desc@@");
-            }
-
+            alsoDislpayToolProperty.put("type", "multiselect");
+            alsoDislpayToolProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/" + getClassName() + "/servicetype=" + WorkflowActivity.TYPE_TOOL);
         } catch (JSONException ignored) {
         }
 
-        JSONObject excludeActivityProperty = new JSONObject();
+        final JSONObject excludeActivityProperty = new JSONObject();
         try {
             excludeActivityProperty.put("name", "excludeActivities");
             excludeActivityProperty.put("label", "@@monitoringMultirowFormBinder.excludeActivities@@");
-            if (appDefinition != null && isClassInstalled("com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder")) {
-                String appId = appDefinition.getAppId();
-                String appVersion = appDefinition.getVersion().toString();
-                excludeActivityProperty.put("type", "multiselect");
-                excludeActivityProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/com.kinnara.kecakplugins.workflowcomponentoptionsbinder.ActivityOptionsBinder/service?appId=" + appId + "&appVersion=" + appVersion + "&type=" + WorkflowActivity.TYPE_NORMAL);
-            } else {
-                excludeActivityProperty.put("type", "textfield");
-                excludeActivityProperty.put("description", "@@monitoringMultirowFormBinder.excludeActivities.desc@@");
-            }
+            excludeActivityProperty.put("type", "multiselect");
+            excludeActivityProperty.put("options_ajax", "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/" + getClassName() + "/service?type=" + WorkflowActivity.TYPE_NORMAL);
         } catch (JSONException ignored) {
         }
 
@@ -323,10 +306,39 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailMonitoringMultirowLoadBinder.json", args, false, "/messages/AuditTrailMonitoringMultirowFormBinder");
     }
 
-    private boolean isClassInstalled(String className) {
-        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
-        Plugin plugin = pluginManager.getPlugin(className);
-        return plugin != null;
+    /**
+     * Web service
+     */
+    @Override
+    public void webService(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        final String type = request.getParameter("type");
+        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+
+        final JSONArray result = new JSONArray();
+
+        try {
+            // add empty record
+            JSONObject empty = new JSONObject();
+            empty.put(FormUtil.PROPERTY_VALUE, "");
+            empty.put(FormUtil.PROPERTY_LABEL, "");
+            result.put(empty);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        final OptionsGenerator generator = new ActivityOptionsGenerator(type == null ? "" : type);
+        generator.generate(Try.onConsumer(row -> {
+            JSONObject item = new JSONObject();
+            item.put(FormUtil.PROPERTY_VALUE, row.getProperty(FormUtil.PROPERTY_VALUE));
+            item.put(FormUtil.PROPERTY_LABEL, row.getProperty(FormUtil.PROPERTY_LABEL));
+            result.put(item);
+        }));
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json");
+        response.getWriter().write(result.toString());
     }
 
     private String mapUsernameToFullUsername(String u) {
