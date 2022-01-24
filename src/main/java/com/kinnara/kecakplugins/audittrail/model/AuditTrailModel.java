@@ -7,6 +7,7 @@ public class AuditTrailModel {
 	private String avatar;
 	private String date;
 	private String comment;
+	private String processName;
 	public String getId() {
 		return id;
 	}
@@ -41,8 +42,12 @@ public class AuditTrailModel {
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
-
-
+	public String getProcessName() {
+		return processName;
+	}
+	public void setProcessName(String processName) {
+		this.processName = processName;
+	}
 
 	
 }

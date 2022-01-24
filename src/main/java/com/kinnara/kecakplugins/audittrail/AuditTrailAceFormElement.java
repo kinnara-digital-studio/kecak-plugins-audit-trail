@@ -1,7 +1,10 @@
 package com.kinnara.kecakplugins.audittrail;
 
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -17,9 +20,12 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.directory.model.User;
+import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
+import org.springframework.context.ApplicationContext;
 
 import com.kinnara.kecakplugins.audittrail.model.AuditTrailModel;
 
@@ -112,6 +118,8 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	private String renderTemplate(String template,FormData formData, Map dataModel) {
 		FormUtil.setReadOnlyProperty(this);
+		ApplicationContext appContext = AppUtil.getApplicationContext();
+		ExtDirectoryManager directoryManager = (ExtDirectoryManager) appContext.getBean("directoryManager");
 		
 		boolean isHidden = ("true".equals(getPropertyString("hiddenWhenReadonly"))
                 && FormUtil.isReadonly(this.getParent(), formData)) ||
@@ -148,7 +156,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             final String variableNote = getPropertyString("variableNote");
             for (FormRow row : rowSet) {
             	final AuditTrailModel audit = new AuditTrailModel();
-                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
+//                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
                 audit.setId(row.getId());
                 audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
                 String finishTime = formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString()), appDefinition.getAppId(), appDefinition.getVersion(), "");
@@ -157,6 +165,25 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 //                }
                 audit.setDate(finishTime);
                 audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty("statusTimeline"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
+                
+                User user = directoryManager.getUserByUsername(row.getProperty("_username"));
+                LogUtil.info(getClassName(), "[USER] "+row.getProperty("_username"));
+				int blobLength;
+				String pp = null;
+				try {
+					if(user!=null) {
+						blobLength = (int) user.getProfilePicture().length();
+						byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
+						pp = Base64.getEncoder().encodeToString(blobAsBytes);
+					}
+				} catch (SQLException e1) {
+					LogUtil.error(getClassName(), e1, e1.getMessage());
+				}
+				if(pp!=null)
+					audit.setAvatar("data:image/jpeg;base64,"+pp);
+				else
+					audit.setAvatar(AppUtil.getRequestContextPath()+"/images/default-avatar.png");
+                audit.setProcessName(row.getProperty("_processName"));
                 datum.add(audit);
             }
         }
