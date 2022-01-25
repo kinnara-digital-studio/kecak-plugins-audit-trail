@@ -1,16 +1,22 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.model.FormDefinition;
+import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.service.FormService;
+import org.joget.apps.form.service.FormUtil;
+import org.joget.workflow.model.WorkflowProcess;
+import org.joget.workflow.model.WorkflowVariable;
+import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 
@@ -68,5 +74,34 @@ public class AuditTrailUtil {
         }
 
         return null;
+    }
+
+    /**
+     * Get list of workflow variable in value->label map
+     * @return
+     */
+    public static List<Map<String, String>> getWorkflowVariableOptions() {
+        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+        final List<Map<String, String>> workflowVariableOptions = Optional.ofNullable(appDefinition)
+                .map(AppDefinition::getPackageDefinition)
+                .map(PackageDefinition::getId)
+                .map(workflowManager::getProcessList)
+                .map(Collection::stream)
+                .orElseGet(Stream::empty)
+                .map(WorkflowProcess::getId)
+                .map(workflowManager::getProcessVariableDefinitionList)
+                .flatMap(Collection::stream)
+                .map(WorkflowVariable::getId)
+                .distinct()
+                .sorted()
+                .map(v -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(FormUtil.PROPERTY_VALUE, v);
+                    map.put(FormUtil.PROPERTY_LABEL, v);
+                    return map;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+        return workflowVariableOptions;
     }
 }

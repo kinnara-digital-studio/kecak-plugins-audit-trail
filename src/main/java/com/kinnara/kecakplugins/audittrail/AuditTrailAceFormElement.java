@@ -1,32 +1,28 @@
 package com.kinnara.kecakplugins.audittrail;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.IntFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.kinnara.kecakplugins.audittrail.model.AuditTrailModel;
+import com.kinnarastudio.commons.Try;
+import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.model.AppDefinition;
-import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
-import org.joget.workflow.model.WorkflowVariable;
-import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
-import com.kinnara.kecakplugins.audittrail.model.AuditTrailModel;
+import javax.annotation.Nonnull;
+import java.sql.Blob;
+import java.util.*;
+import java.util.function.IntFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.kinnara.kecakplugins.audittrail.AuditTrailMonitoringMultirowFormBinder.Fields.*;
 
 public class AuditTrailAceFormElement extends Element implements FormBuilderPaletteElement{
 
@@ -47,47 +43,18 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
 	@Override
 	public String getPropertyOptions() {
-		final List<Map<String, String>> monitoringOptions = Arrays.stream(AuditTrailMonitoringMultirowFormBinder.Fields.values())
-                .collect(ArrayList::new, (list, field) -> {
-                    Map<String, String> map = new HashMap<>();
-                    map.put("value", field.toString());
-                    map.put("label", field.getLabel());
-                    list.add(map);
-                }, Collection::addAll);
-
-        WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-        AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
-            final PackageDefinition packageDefinition = appDefinition.getPackageDefinition();
-            final String packageId = packageDefinition.getId();
-            long packageVersion = packageDefinition.getVersion();
-            monitoringOptions.addAll(workflowManager.getProcessList(packageId, String.valueOf(packageVersion))
-                    .stream()
-                    .flatMap(p -> workflowManager.getProcessVariableDefinitionList(p.getId()).stream())
-                    .map(WorkflowVariable::getId)
-                    .distinct()
-                    .sorted()
-                    .map(v -> {
-                        Map<String, String> map = new HashMap<>();
-                        map.put("value", v);
-                        map.put("label", "Variable " + v);
-                        return map;
-                    })
-                    .collect(Collectors.toCollection(ArrayList::new)));
-        }
+        final List<Map<String, String>> workflowVariableOptions = AuditTrailUtil.getWorkflowVariableOptions();
 
         final String[] args = {
-                AuditTrailMultirowLoadBinder.class.getName(),
                 AuditTrailMonitoringMultirowFormBinder.class.getName(),
-                AuditTrailMonitoringMultirowFormBinder.class.getName(),
-                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
+                new JSONArray(workflowVariableOptions).toString().replaceAll("\"", "'")
         };
         return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailAceFormElement.json", args, true, "/messages/AuditTrailAceFormElement");
 	}
 
 	@Override
 	public String getName() {
-		return "Auditrail Ace Element";
+		return "Audit Trail Ace Element";
 	}
 
 	@Override
@@ -115,10 +82,8 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 		return "/plugin/org.joget.apps.form.lib.TextField/images/textField_icon.gif";
 	}
 
-	private String renderTemplate(String template,FormData formData, Map dataModel) {
+	protected String renderTemplate(String template,FormData formData, Map dataModel) {
 		FormUtil.setReadOnlyProperty(this);
-		ApplicationContext appContext = AppUtil.getApplicationContext();
-		ExtDirectoryManager directoryManager = (ExtDirectoryManager) appContext.getBean("directoryManager");
 		
 		boolean isHidden = ("true".equals(getPropertyString("hiddenWhenReadonly"))
                 && FormUtil.isReadonly(this.getParent(), formData)) ||
@@ -131,12 +96,9 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             return "";
         }
 
-        AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-
         dataModel.put("className", getClassName());
 
         // Data tables datas container
-        final List<AuditTrailModel> datum = new ArrayList<>();
         final List<String> headers = new ArrayList<>();
 
         // Column id container
@@ -150,50 +112,30 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             dataModel.put("headers", headers);
         }
 
-        final FormRowSet rowSet = formData.getLoadBinderData(this);
-        if (rowSet != null) {
-            final String variableNote = getPropertyString("variableNote");
-            for (FormRow row : rowSet) {
-            	final AuditTrailModel audit = new AuditTrailModel();
-                LogUtil.info(getClassName(),"FinishTime ["+row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString())+"]");
-                LogUtil.info(getClassName()," statusTimeLine ["+row.getProperty("statusTimeline")+"]");
-                audit.setId(row.getId());
-                audit.setPerformer(formatColumn("_userFullname", null, row.getId(), row.getProperty("_userFullname"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                String finishTime = row.getProperty(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString());
-//                if(finishTime.isEmpty()){
-//                    finishTime="Now";
-//                }
-                audit.setDate(formatColumn(AuditTrailMonitoringMultirowFormBinder.Fields.FINISH_TIME.toString(), null, row.getId(), finishTime, appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                audit.setComment(formatColumn(variableNote, null, row.getId(), row.getProperty("statusTimeline"), appDefinition.getAppId(), appDefinition.getVersion(), ""));
-                
-                User user = directoryManager.getUserByUsername(row.getProperty("_username"));
-                LogUtil.info(getClassName(), "[USER] "+row.getProperty("_username"));
-				int blobLength;
-				String pp = null;
-				try {
-					if(user!=null) {
-						blobLength = (int) user.getProfilePicture().length();
-						byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
-						pp = Base64.getEncoder().encodeToString(blobAsBytes);
-					}
-				} catch (SQLException e1) {
-					LogUtil.error(getClassName(), e1, e1.getMessage());
-				}
-				if(pp!=null)
-					audit.setAvatar("data:image/jpeg;base64,"+pp);
-				else
-					audit.setAvatar(AppUtil.getRequestContextPath()+"/images/default-avatar.png");
-                audit.setProcessName(row.getProperty("_processName"));
-                datum.add(audit);
-            }
+        final List<AuditTrailModel> data = new ArrayList<>();
+        final FormRowSet rowSet = getTimelineData(this, formData);
+        for (FormRow row : rowSet) {
+            final AuditTrailModel audit = new AuditTrailModel();
+
+            audit.setId(row.getId());
+            audit.setPerformer(row.getProperty(USER_FULLNAME.toString()));
+            audit.setDate(row.getProperty(FINISH_TIME.toString()));
+            audit.setComment(row.getProperty(getPropertyVariableNote()));
+            audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
+
+            String avatarUri = getAvatarUri(row.getProperty(USERNAME.toString()));
+            audit.setAvatar(avatarUri);
+
+            data.add(audit);
         }
+
+        dataModel.put("datas", data);
 
         Object[] sortBy = (Object[]) getProperty("sortBy");
         if (sortBy != null && sortBy.length > 0) {
             dataModel.put("sort", translateSoryBy(sortBy));
         }
 
-        dataModel.put("datas", datum);
         dataModel.put("error", false);
 
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
@@ -241,20 +183,87 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
     @Override
     public String renderAdminLteTemplate(FormData formData, Map dataModel){
-        String template = "AuditTrailAceFormElement.ftl";
-        return renderTemplate(template,formData,dataModel);
+        String template = "UnsupportedFormElement.ftl";
+        return FormUtil.generateElementHtml(this, formData, template, dataModel);
     }
 
 	@Override
 	public String renderAdminKitTemplate(FormData formData, Map dataModel) {
-		String template = "AuditTrailAceFormElement.ftl";
-        return renderTemplate(template,formData,dataModel);
+        String template = "UnsupportedFormElement.ftl";
+        return FormUtil.generateElementHtml(this, formData, template, dataModel);
 	}
 
 	@Override
 	public String renderTemplate(FormData formData, Map dataModel) {
-		String template = "AuditTrailAceFormElement.ftl";
-        return renderTemplate(template,formData,dataModel);
+		String template = "UnsupportedFormElement.ftl";
+        return FormUtil.generateElementHtml(this, formData, template, dataModel);
 	}
 
+    @Override
+    public Object handleElementValueResponse(@Nonnull Element element, @Nonnull FormData formData) throws JSONException {
+        final FormRowSet timelineData = getTimelineData((AuditTrailAceFormElement) element, formData);
+        return timelineData.stream()
+                .map(Try.onFunction(JSONObject::new))
+                .collect(JSONCollectors.toJSONArray());
+    }
+
+    @Nonnull
+    protected FormRowSet getTimelineData(AuditTrailAceFormElement element, FormData formData) {
+        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        final String appId = appDefinition.getAppId();
+        final long appVersion = appDefinition.getVersion();
+        final String variableNote = element.getPropertyVariableNote();
+        final FormRowSet rowSet = Optional.ofNullable(formData.getLoadBinderData(element))
+                .map(Collection::stream)
+                .orElseGet(Stream::empty)
+                .peek(row -> {
+                    final String rowId = row.getId();
+
+                    final String userFullname = row.getProperty(USER_FULLNAME.toString());
+                    final String formattedUserFullname = formatColumn(USER_FULLNAME.toString(), null, rowId, userFullname, appId, appVersion, "");
+                    if(formattedUserFullname != null) {
+                        row.setProperty(USER_FULLNAME.toString(), formattedUserFullname);
+                    }
+
+                    final String finishTime = row.getProperty(FINISH_TIME.toString());
+                    final String formatterFinishTime = formatColumn(FINISH_TIME.toString(), null, rowId, finishTime, appId, appVersion, "");
+                    if(formatterFinishTime != null) {
+                        row.setProperty(FINISH_TIME.toString(), formatterFinishTime);
+                    }
+
+                    final String statusTimeline = row.getProperty(variableNote);
+                    final String formattedStatusTimeline = formatColumn(variableNote, null, rowId, statusTimeline, appId, appVersion, "");
+                    if(formattedStatusTimeline != null) {
+                        row.getProperty(variableNote, formattedStatusTimeline);
+                    }
+                })
+                .collect(FormRowSet::new, FormRowSet::add, FormRowSet::addAll);
+
+        return rowSet;
+    }
+
+    protected String getAvatarUri(String username) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final ExtDirectoryManager directoryManager = (ExtDirectoryManager) appContext.getBean("directoryManager");
+        final Optional<User> optUser = Optional.of(username).map(directoryManager::getUserByUsername);
+        final Optional<Blob> optProfilePicture = optUser.map(User::getProfilePicture);
+
+        long blobLength = optProfilePicture
+                .map(Try.onFunction(Blob::length))
+                .orElse(0L);
+
+        return optProfilePicture
+                .map(Try.onFunction(b -> b.getBytes(1, (int) blobLength)))
+                .map(b -> Base64.getEncoder().encodeToString(b))
+
+                // get profile picture in base64 format
+                .map(s -> "data:image/jpeg;base64," + s)
+
+                // get default profile picture
+                .orElseGet(() -> AppUtil.getRequestContextPath() + "/images/default-avatar.png");
+    }
+
+    protected String getPropertyVariableNote() {
+        return getPropertyString("variableNote");
+    }
 }

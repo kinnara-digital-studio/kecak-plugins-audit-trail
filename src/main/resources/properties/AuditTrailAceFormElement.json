@@ -28,8 +28,9 @@
       }, {
         name : 'variableNote',
         label : '@@auditTrailAce.variableNote@@',
-        type : 'textfield',
-        required : 'true'
+        type : 'selectbox',
+        required : 'true',
+        options : %s
       }
     ]
   }, {

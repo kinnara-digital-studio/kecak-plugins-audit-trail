@@ -5,6 +5,7 @@ import com.kinnara.kecakplugins.audittrail.generators.OptionsGenerator;
 import com.kinnarastudio.commons.Try;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;
+import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
@@ -66,7 +67,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
     }
 
 
-    public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private Date keepCreatedDate = null;
 
@@ -165,7 +166,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     if (info.getFinishTime() != null)
                         row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
 
-                    if(isActivity(definition)) {
+                    if (isActivity(definition)) {
                         row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
                         if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
@@ -243,29 +244,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getPropertyOptions() {
-        final List<Map<String, String>> monitoringOptions;
-        final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        if (workflowManager != null && appDefinition != null && appDefinition.getPackageDefinition() != null) {
-            String packageId = appDefinition.getPackageDefinition().getId();
-            monitoringOptions = workflowManager.getProcessList(packageId)
-                    .stream()
-                    .map(WorkflowProcess::getId)
-                    .map(workflowManager::getProcessVariableDefinitionList)
-                    .flatMap(Collection::stream)
-                    .map(WorkflowVariable::getId)
-                    .distinct()
-                    .sorted()
-                    .map(v -> {
-                        Map<String, String> map = new HashMap<>();
-                        map.put("value", v);
-                        map.put("label", v);
-                        return map;
-                    })
-                    .collect(Collectors.toCollection(ArrayList::new));
-        } else {
-            monitoringOptions = new ArrayList<>();
-        }
+        final List<Map<String, String>> workflowVariableOptions = AuditTrailUtil.getWorkflowVariableOptions();
 
         final JSONObject startProcessToolProperty = new JSONObject();
         try {
@@ -297,9 +276,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         }
 
         String[] args = {
-                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
+                new JSONArray(workflowVariableOptions).toString().replaceAll("\"", "'"),
                 startProcessToolProperty.toString().replaceAll("\"", "'"),
-                new JSONArray(monitoringOptions).toString().replaceAll("\"", "'"),
+                new JSONArray(workflowVariableOptions).toString().replaceAll("\"", "'"),
                 alsoDislpayToolProperty.toString().replaceAll("\"", "'"),
                 excludeActivityProperty.toString().replaceAll("\"", "'")
         };
@@ -400,18 +379,17 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
     }
 
     /**
-     *
      * @return
      */
     @Nonnull
     protected Map<String, String> getStartProcessValues() {
-        return Arrays.stream((Object[])getProperty("startProcessValues"))
-                .map(o -> (Map<String, Object>)o)
+        return Arrays.stream((Object[]) getProperty("startProcessValues"))
+                .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
     }
 
     protected Map<String, String> getPendingValues() {
-        return Arrays.stream((Object[])getProperty("pendingValues"))
+        return Arrays.stream((Object[]) getProperty("pendingValues"))
                 .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
     }
