@@ -3,6 +3,7 @@ package com.kinnara.kecakplugins.audittrail;
 import com.kinnara.kecakplugins.audittrail.model.AuditTrailModel;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
@@ -10,6 +11,9 @@ import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
+import org.joget.workflow.model.WorkflowAssignment;
+import org.joget.workflow.model.WorkflowVariable;
+import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -114,6 +118,11 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
         final List<AuditTrailModel> data = new ArrayList<>();
         final FormRowSet rowSet = getTimelineData(this, formData);
+        
+        ApplicationContext context = AppUtil.getApplicationContext();
+		WorkflowManager workflowManager = (WorkflowManager) context.getBean("workflowManager");
+		
+		
         for (FormRow row : rowSet) {
             final AuditTrailModel audit = new AuditTrailModel();
 
@@ -121,7 +130,21 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             audit.setPerformer(row.getProperty(USER_FULLNAME.toString()));
             audit.setDate(row.getProperty(FINISH_TIME.toString()));
             audit.setComment(row.getProperty(getPropertyVariableNote()));
-            audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
+            
+            WorkflowAssignment workflowAssignment = workflowManager.getAssignment(row.getProperty(ID.toString()));
+            if(workflowAssignment!=null) {
+            	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(workflowAssignment.getActivityId());
+            	String serviceLabel = "";
+            	for(WorkflowVariable wVar: variableList) {
+        			if(wVar.getName().equals("serviceLabel")) {
+        				serviceLabel = (String) wVar.getVal();
+        			}
+        		}
+            	audit.setProcessName(serviceLabel);
+            }else {
+            	audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
+            }
+            
 
             String avatarUri = getAvatarUri(row.getProperty(USERNAME.toString()));
             audit.setAvatar(avatarUri);
