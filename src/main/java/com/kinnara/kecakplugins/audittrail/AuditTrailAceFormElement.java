@@ -265,7 +265,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                         Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(workflowAssignment.getActivityId());
                         String serviceLabel = "";
                         for(WorkflowVariable wVar: variableList) {
-                            if(wVar.getName().equals("serviceLabel")) {
+                            if("serviceLabel".equals(wVar.getName())) {
                                 serviceLabel = (String) wVar.getVal();
                             }
                         }
