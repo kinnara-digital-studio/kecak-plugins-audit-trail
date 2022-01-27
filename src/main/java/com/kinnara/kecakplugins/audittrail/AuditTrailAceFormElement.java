@@ -8,6 +8,7 @@ import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.workflow.model.WorkflowAssignment;
@@ -123,8 +124,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
         final FormRowSet rowSet = getTimelineData(this, formData);
         final List<AuditTrailModel> data = convertToAuditTrailData(rowSet);
-
-        dataModel.put("data", data);
+        dataModel.put("datas", data);
 
         Object[] sortBy = (Object[]) getProperty("sortBy");
         if (sortBy != null && sortBy.length > 0) {
