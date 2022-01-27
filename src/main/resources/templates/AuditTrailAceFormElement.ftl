@@ -14,7 +14,7 @@
         <div class="scroll-content" style="max-height: ${element.properties.height};">
             <div id="${elementParamName!}_accordion" class="accordion">
                 <#assign count = 0>
-                <#list datas! as data>
+                <#list data! as data>
                     <#assign count = count + 1>
                     <div class="accordion-group">
                         <div class="accordion-heading">

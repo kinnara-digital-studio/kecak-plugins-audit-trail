@@ -51,9 +51,12 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
         final String[] args = {
                 AuditTrailMonitoringMultirowFormBinder.class.getName(),
-                new JSONArray(workflowVariableOptions).toString().replaceAll("\"", "'")
+                new JSONArray(workflowVariableOptions).toString(),
+                getAuditFieldOptions().toString(),
+                getAuditFieldOptions().toString(),
+                getAuditFieldOptions().toString()
         };
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailAceFormElement.json", args, true, "/messages/AuditTrailAceFormElement");
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailAceFormElement.json", args, true, "/messages/AuditTrailAceFormElement").replaceAll("\"", "'");
 	}
 
 	@Override
@@ -87,6 +90,9 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 	}
 
 	protected String renderTemplate(String template,FormData formData, Map dataModel) {
+        final ApplicationContext context = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) context.getBean("workflowManager");
+
 		FormUtil.setReadOnlyProperty(this);
 		
 		boolean isHidden = ("true".equals(getPropertyString("hiddenWhenReadonly"))
@@ -116,43 +122,40 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
             dataModel.put("headers", headers);
         }
 
-        final List<AuditTrailModel> data = new ArrayList<>();
         final FormRowSet rowSet = getTimelineData(this, formData);
-        
-        ApplicationContext context = AppUtil.getApplicationContext();
-		WorkflowManager workflowManager = (WorkflowManager) context.getBean("workflowManager");
-		
-		
-        for (FormRow row : rowSet) {
-            final AuditTrailModel audit = new AuditTrailModel();
 
-            audit.setId(row.getId());
-            audit.setPerformer(row.getProperty(USER_FULLNAME.toString()));
-            audit.setDate(row.getProperty(FINISH_TIME.toString()));
-            audit.setComment(row.getProperty(getPropertyVariableNote()));
-            
-            WorkflowAssignment workflowAssignment = workflowManager.getAssignment(row.getProperty(ID.toString()));
-            if(workflowAssignment!=null) {
-            	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(workflowAssignment.getActivityId());
-            	String serviceLabel = "";
-            	for(WorkflowVariable wVar: variableList) {
-        			if(wVar.getName().equals("serviceLabel")) {
-        				serviceLabel = (String) wVar.getVal();
-        			}
-        		}
-            	audit.setProcessName(serviceLabel);
-            }else {
-            	audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
-            }
-            
+        final List<AuditTrailModel> data = rowSet
+                .stream()
+                .map(row -> {
+                    final AuditTrailModel audit = new AuditTrailModel();
 
-            String avatarUri = getAvatarUri(row.getProperty(USERNAME.toString()));
-            audit.setAvatar(avatarUri);
+                    audit.setId(row.getId());
+                    audit.setPerformer(row.getProperty(USER_FULLNAME.toString()));
+                    audit.setDate(row.getProperty(FINISH_TIME.toString()));
+                    audit.setComment(row.getProperty(getPropertyVariableNote()));
 
-            data.add(audit);
-        }
+                    WorkflowAssignment workflowAssignment = workflowManager.getAssignment(row.getProperty(ID.toString()));
+                    if(workflowAssignment!=null) {
+                        Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(workflowAssignment.getActivityId());
+                        String serviceLabel = "";
+                        for(WorkflowVariable wVar: variableList) {
+                            if(wVar.getName().equals("serviceLabel")) {
+                                serviceLabel = (String) wVar.getVal();
+                            }
+                        }
+                        audit.setProcessName(serviceLabel);
+                    } else {
+                        audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
+                    }
 
-        dataModel.put("datas", data);
+                    String avatarUri = getAvatarUri(row.getProperty(USERNAME.toString()));
+                    audit.setAvatar(avatarUri);
+
+                    return audit;
+                })
+                .collect(Collectors.toList());
+
+        dataModel.put("data", data);
 
         Object[] sortBy = (Object[]) getProperty("sortBy");
         if (sortBy != null && sortBy.length > 0) {
@@ -288,5 +291,20 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
     protected String getPropertyVariableNote() {
         return getPropertyString("variableNote");
+    }
+
+    protected JSONArray getAuditFieldOptions() {
+        try {
+            return new JSONArray()
+                    .put(new JSONObject().put("value", "id").put("label", "id"))
+                    .put(new JSONObject().put("value", "performer").put("label", "performer"))
+                    .put(new JSONObject().put("value", "status").put("label", "status"))
+                    .put(new JSONObject().put("value", "avatar").put("label", "avatar"))
+                    .put(new JSONObject().put("value", "date").put("label", "date"))
+                    .put(new JSONObject().put("value", "comment").put("label", "comment"))
+                    .put(new JSONObject().put("value", "processName").put("label", "processName"));
+        } catch (JSONException e) {
+            return new JSONArray();
+        }
     }
 }
