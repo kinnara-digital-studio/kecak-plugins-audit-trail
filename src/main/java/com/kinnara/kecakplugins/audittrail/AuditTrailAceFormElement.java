@@ -256,7 +256,9 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
 
                     audit.setId(row.getId());
                     audit.setPerformer(row.getProperty(USER_FULLNAME.toString()));
-                    audit.setDate(row.getProperty(FINISH_TIME.toString()));
+
+                    final String finishTime = row.getProperty(FINISH_TIME.toString());
+                    audit.setDate(finishTime == null || finishTime.isEmpty() ? "Now" : finishTime);
                     audit.setComment(row.getProperty(getPropertyVariableNote()));
 
                     WorkflowAssignment workflowAssignment = workflowManager.getAssignment(row.getProperty(ID.toString()));
@@ -264,7 +266,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                         Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(workflowAssignment.getActivityId());
                         String serviceLabel = "";
                         for(WorkflowVariable wVar: variableList) {
-                            if(wVar.getName().equals("serviceLabel")) {
+                            if("serviceLabel".equals(wVar.getName())) {
                                 serviceLabel = (String) wVar.getVal();
                             }
                         }
