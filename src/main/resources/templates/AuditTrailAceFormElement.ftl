@@ -41,7 +41,7 @@
 
                                             <span class="widget-toolbar no-border">
                                                 <i class="ace-icon fa fa-clock-o bigger-110"></i>
-                                                ${data.date!}
+                                                ${data.date!} Date
                                             </span>
 
                                             <span class="widget-toolbar">
