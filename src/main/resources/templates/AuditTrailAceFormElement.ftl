@@ -41,7 +41,7 @@
 
                                             <span class="widget-toolbar no-border">
                                                 <i class="ace-icon fa fa-clock-o bigger-110"></i>
-                                                ${data.date!} Date
+                                                ${data.date!}
                                             </span>
 
                                             <span class="widget-toolbar">
@@ -57,7 +57,8 @@
 
                                         <div class="widget-body">
                                             <div class="widget-main">
-                                                ${data.comment!}
+                                                ${data.comment!}<br />
+                                                ${data.processName!}
                                                 <!--<div class="space-6"></div>
 
                                                 <div class="widget-toolbox clearfix">
