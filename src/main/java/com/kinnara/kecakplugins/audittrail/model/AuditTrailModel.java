@@ -8,6 +8,8 @@ public class AuditTrailModel {
 	private String date;
 	private String comment;
 	private String processName;
+	private String activityName;
+	
 	public String getId() {
 		return id;
 	}
@@ -48,6 +50,10 @@ public class AuditTrailModel {
 	public void setProcessName(String processName) {
 		this.processName = processName;
 	}
-
-	
+	public String getActivityName() {
+		return activityName;
+	}
+	public void setActivityName(String activityName) {
+		this.activityName = activityName;
+	}
 }

@@ -205,7 +205,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                         .put("performer", a.getPerformer())
                         .put("status", a.getStatus())
                         .put("avatar", a.getAvatar())
-                        .put("date", a.getDate())
+                        .put("date", a.getDate().isEmpty()?"Now":a.getDate())
                         .put("comment", a.getComment())
                         .put("processName", a.getProcessName())))
                 .collect(JSONCollectors.toJSONArray());
@@ -222,7 +222,6 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                 .orElseGet(Stream::empty)
                 .peek(row -> {
                     final String rowId = row.getId();
-
                     final String userFullname = row.getProperty(USER_FULLNAME.toString());
                     final String formattedUserFullname = formatColumn(USER_FULLNAME.toString(), null, rowId, userFullname, appId, appVersion, "");
                     if(formattedUserFullname != null) {
@@ -273,7 +272,7 @@ public class AuditTrailAceFormElement extends Element implements FormBuilderPale
                     } else {
                         audit.setProcessName(row.getProperty(PROCESS_NAME.toString()));
                     }
-
+                    audit.setActivityName(row.getProperty(ACTIVITY_NAME.toString()));
                     String avatarUri = getAvatarUri(row.getProperty(USERNAME.toString()));
                     audit.setAvatar(avatarUri);
 

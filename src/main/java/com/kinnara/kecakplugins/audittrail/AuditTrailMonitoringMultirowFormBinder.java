@@ -383,13 +383,17 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
      */
     @Nonnull
     protected Map<String, String> getStartProcessValues() {
-        return Arrays.stream((Object[]) getProperty("startProcessValues"))
+        return Optional.ofNullable((Object[])getProperty("startProcessValues"))
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
                 .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
     }
 
     protected Map<String, String> getPendingValues() {
-        return Arrays.stream((Object[]) getProperty("pendingValues"))
+        return Optional.ofNullable((Object[]) getProperty("pendingValues"))
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
                 .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
     }

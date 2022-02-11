@@ -31,10 +31,6 @@
 					</span>
 
 					<span class="widget-toolbar">
-						<a href="#" data-action="reload">
-							<i class="ace-icon fa fa-refresh"></i>
-						</a>
-
 						<a href="#" data-action="collapse">
 							<i class="ace-icon fa fa-chevron-up"></i>
 						</a>
@@ -44,7 +40,7 @@
 				<div class="widget-body">
 					<div class="widget-main">
 						${data.comment!} <br />
-						${data.id!}
+						${data.activityName!}
 						<!--<div class="space-6"></div>
 
 						<div class="widget-toolbox clearfix">
