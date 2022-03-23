@@ -3,7 +3,7 @@
     <label class="label">${element.properties.label} Auditrail Ace Timeline</label>
 </div>
 <#else>
-<div class="timeline-container  ace-scroll ${elementMetaData!}">
+<div class="timeline-container ${elementMetaData!}">
 	<div class="timeline-label">
 		<span class="label label-primary arrowed-in-right label-lg">
 			<b>${element.properties.label}</b>
@@ -11,7 +11,6 @@
 	</div>
 
 	<div class="timeline-items">
-	<div class="scroll-content" style="max-height: ${element.properties.height};">
 	<#list datas! as data>
 		<div class="timeline-item clearfix">
 			<div class="timeline-info">
@@ -68,7 +67,15 @@
 			</div>
 		</div>
 	</#list>
-	</div>
 	</div><!-- /.timeline-items -->
 </div><!-- /.timeline-container -->
+
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.timeline-items').ace_scroll({
+      size: 380
+  });
+});
+
+</script>
 </#if>
