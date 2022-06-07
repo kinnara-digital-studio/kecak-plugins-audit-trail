@@ -5,7 +5,6 @@ import com.kinnara.kecakplugins.audittrail.generators.OptionsGenerator;
 import com.kinnarastudio.commons.Try;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;
-import org.joget.apps.app.model.PackageDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
@@ -14,7 +13,6 @@ import org.joget.directory.model.service.ExtDirectoryManager;
 import org.joget.plugin.base.PluginWebSupport;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowProcess;
-import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
@@ -47,6 +45,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         FINISH_TIME("_finishTime", "Finish Time"),
         USERNAME("_username", "Username"),
         USER_FULLNAME("_userFullname", "User Full Name"),
+
+        USER_FIRST_NAME("_userFirstName", "User First Name"),
         PARTICIPANT("_participantId", "Participant");
 
         private String name;
@@ -132,7 +132,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         row.setProperty(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime()));
                         row.setProperty(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime())); // for start process this should be the same
                         row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
-                        row.setProperty(Fields.USER_FULLNAME.toString(), process == null || process.getRequesterId() == null ? "" : mapUsernameToFullUsername(process.getRequesterId()));
+                        row.setProperty(Fields.USER_FULLNAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFullUsername).orElse(""));
+                        row.setProperty(Fields.USER_FIRST_NAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFirstName).orElse(""));
 
                         final Map<String, String> startProcessValues = getStartProcessValues();
                         startProcessValues.forEach(row::setProperty);
@@ -173,11 +174,18 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                             WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
                             row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
                             row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                            row.setProperty(Fields.USER_FIRST_NAME.toString(), mapUsernameToFirstName(process.getRequesterId()));
                         } else {
                             row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
                             row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
                                     .filter(u -> !u.isEmpty())
                                     .map(this::mapUsernameToFullUsername)
+                                    .filter(u -> !u.isEmpty())
+                                    .collect(Collectors.joining(","))
+                            );
+                            row.setProperty(Fields.USER_FIRST_NAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                    .filter(u -> !u.isEmpty())
+                                    .map(this::mapUsernameToFirstName)
                                     .filter(u -> !u.isEmpty())
                                     .collect(Collectors.joining(","))
                             );
@@ -320,13 +328,23 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         response.getWriter().write(result.toString());
     }
 
-    private String mapUsernameToFullUsername(String u) {
+    protected String mapUsernameToFullUsername(String username) {
         ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
-        User user = directoryManager.getUserByUsername(u);
+        User user = directoryManager.getUserByUsername(username);
         if (user == null) {
-            return u;
+            return username;
         } else {
             return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
+        }
+    }
+    
+    protected String mapUsernameToFirstName(String username) {
+        final ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
+        User user = directoryManager.getUserByUsername(username);
+        if (user == null) {
+            return username;
+        } else {
+            return user.getFirstName();
         }
     }
 
