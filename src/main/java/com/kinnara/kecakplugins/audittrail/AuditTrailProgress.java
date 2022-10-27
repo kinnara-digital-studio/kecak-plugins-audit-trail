@@ -12,6 +12,7 @@ import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.model.service.WorkflowUserManager;
@@ -75,7 +76,9 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

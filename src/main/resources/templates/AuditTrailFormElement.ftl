@@ -1,6 +1,8 @@
+<#assign elementId = elementParamName + "_" + element.properties.elementUniqueKey >
+
 <#if includeMetaData>
     <div class="form-cell" ${elementMetaData!}>
-        <table id="${elementParamName!}${element.properties.elementUniqueKey!}" class="table table-striped table-bordered" cellspacing="0" width="100%">
+        <table id="" class="table table-striped table-bordered" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <#list headers as header>
@@ -32,20 +34,18 @@
         <script type="text/javascript">
             $(document).ready(function(){
                 try {
-                    $('table#${elementParamName!}${element.properties.elementUniqueKey!}').DataTable({
+                    $('table#${elementId}').DataTable({
                         "pagingType": "full_numbers",
                         "ordering" : false
                     });
-                } catch (err) {
-                    // do nothing
-                }
+                } catch (ignored) {}
 
-                <#-- $('table#${elementParamName!}${element.properties.elementUniqueKey!}').DataTable({"pagingType": "full_numbers"});  -->
+                <#-- $('table#${elementId}').DataTable({"pagingType": "full_numbers"});  -->
             });
 
         </script>
 
-        <table id="${elementParamName!}${element.properties.elementUniqueKey!}" class="table table-striped table-bordered" cellspacing="0" width="100%">
+        <table id="${elementId}" class="table table-striped table-bordered" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <#list headers as header>

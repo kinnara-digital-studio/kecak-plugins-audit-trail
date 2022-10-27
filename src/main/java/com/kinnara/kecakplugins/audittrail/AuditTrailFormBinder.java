@@ -7,10 +7,12 @@ import org.joget.apps.form.lib.WorkflowFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 /**
@@ -28,7 +30,9 @@ public class AuditTrailFormBinder extends WorkflowFormBinder{
 	
 	@Override
 	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
+		PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+		ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+		return resourceBundle.getString("buildNumber");
 	}
 	
 	@Override

@@ -2,6 +2,7 @@ package com.kinnara.kecakplugins.audittrail;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 import org.joget.apps.app.model.AuditTrail;
@@ -36,7 +37,9 @@ public class AuditTrailFormCollector extends DefaultAuditTrailPlugin{
 	}
 
 	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
+		PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+		ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+		return resourceBundle.getString("buildNumber");
 	}
 
 	public String getDescription() {

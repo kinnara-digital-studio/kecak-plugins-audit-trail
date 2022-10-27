@@ -8,6 +8,7 @@ import org.joget.apps.form.model.*;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.ExtDirectoryManager;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
@@ -40,7 +41,9 @@ implements FormLoadBinder,
 	}
 
 	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
+		PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+		ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+		return resourceBundle.getString("buildNumber");
 	}
 
 	public String getDescription() {
