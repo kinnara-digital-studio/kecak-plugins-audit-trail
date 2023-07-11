@@ -11,7 +11,6 @@ import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.kecak.apps.form.model.AceFormElement;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -82,11 +81,6 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
         String html = FormUtil.generateElementHtml(this, formData, template, dataModel);
         return html;
-    }
-
-    @Override
-    public String renderAceTemplate(FormData formData, Map dataModel) {
-        return super.renderAceTemplate(formData, dataModel);
     }
 
     private List<Map<String, String>> translateSoryBy(Object[] sortBy) {

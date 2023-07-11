@@ -5,14 +5,18 @@ import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataDaoImpl;
+import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultAuditTrailPlugin;
 import org.joget.workflow.model.WorkflowAssignment;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin {
     final Collection<String> IGNORED_FIELDS = Collections.unmodifiableCollection(Arrays.asList(
@@ -49,9 +53,25 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
 
         final AuditTrailDao auditTrailDao = AuditTrailUtil.getAuditTrailDao();
 
-        final String formId = (String) callerAuditTrail.getArgs()[0];
-        final String formTable = (String) callerAuditTrail.getArgs()[1];
-        final FormRowSet rowSet = (FormRowSet) callerAuditTrail.getArgs()[2];
+        final String formId;
+        final String formTable;
+        final FormRowSet rowSet;
+
+        final Object[] args = callerAuditTrail.getArgs();
+        if(args.length == 2) {
+            final Form form = (Form) callerAuditTrail.getArgs()[0];
+            formId = form.getPropertyString(FormUtil.PROPERTY_ID);
+            formTable = form.getPropertyString(FormUtil.PROPERTY_TABLE_NAME);
+            rowSet = (FormRowSet) callerAuditTrail.getArgs()[1];
+        } else if(args.length == 3){
+            formId = (String) callerAuditTrail.getArgs()[0];
+            formTable = (String) callerAuditTrail.getArgs()[1];
+            rowSet = (FormRowSet) callerAuditTrail.getArgs()[2];
+        } else {
+            LogUtil.warn(getClassName(), "Error storing audittrail data args ["+ Optional.of(args).map(Arrays::stream).orElseGet(Stream::empty).map(String::valueOf).collect(Collectors.joining(" | ")) +"]");
+            return null;
+        }
+
         rowSet.forEach(row -> {
             final String id = row.getId();
             row.forEach((k, v) -> {
