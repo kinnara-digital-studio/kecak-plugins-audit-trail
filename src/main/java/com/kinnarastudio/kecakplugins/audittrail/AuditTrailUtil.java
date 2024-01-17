@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnarastudio.kecakplugins.audittrail;
 
 import java.util.*;
 import java.util.stream.Collectors;

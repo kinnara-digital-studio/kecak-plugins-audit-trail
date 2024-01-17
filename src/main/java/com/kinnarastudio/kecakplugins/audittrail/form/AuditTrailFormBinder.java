@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnarastudio.kecakplugins.audittrail.form;
 
-import org.joget.apps.app.service.AppPluginUtil;
+import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.WorkflowFormBinder;

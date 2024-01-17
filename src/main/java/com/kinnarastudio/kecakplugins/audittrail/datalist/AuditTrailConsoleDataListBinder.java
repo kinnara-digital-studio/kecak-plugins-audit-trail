@@ -1,9 +1,10 @@
-package com.kinnara.kecakplugins.audittrail.datalist;
+package com.kinnarastudio.kecakplugins.audittrail.datalist;
 
-import com.kinnara.kecakplugins.audittrail.AuditTrailUtil;
+import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
 import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.*;
+import org.joget.plugin.base.PluginManager;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -82,7 +83,9 @@ public class AuditTrailConsoleDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.audittrail.auditplugins;
+package com.kinnarastudio.kecakplugins.audittrail.auditplugins;
 
-import com.kinnara.kecakplugins.audittrail.AuditTrailUtil;
+import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
 import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.service.AppUtil;
@@ -10,6 +10,7 @@ import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultAuditTrailPlugin;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 
 import java.util.*;
@@ -36,7 +37,9 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
@@ -47,7 +50,7 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
     @Override
     public Object execute(Map map) {
         final AuditTrail callerAuditTrail = (AuditTrail) map.get("auditTrail");
-        if (!callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
+        if (!isEnabled() || !callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
             return null;
         }
 
@@ -98,6 +101,7 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
                 auditTrail.setMessage(message);
 
                 auditTrailDao.addAuditTrail(auditTrail);
+
             });
         });
 
@@ -147,5 +151,9 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
         }
 
         return m.appendTail(sb).toString();
+    }
+
+    protected boolean isEnabled() {
+        return "true".equalsIgnoreCase(getPropertyString("enable"));
     }
 }

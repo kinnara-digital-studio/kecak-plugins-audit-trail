@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnarastudio.kecakplugins.audittrail.form;
 
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
@@ -98,6 +98,7 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
         if(!fPK.equals("id")){
             fPK = "c_" + fPK;
         }
+
         FormRowSet rs = formDataDao.find(getPropertyString("formDefId"), tableName, " WHERE "+fPK+"=?",
                 new Object[] { primaryKey }, null, null, null, null);
         String filePath = "/web/client/app/" + appDef.getAppId() + "/" + appDef.getVersion() + "/form/download/";
@@ -115,15 +116,6 @@ public class AuditTrailProgress extends Element implements FormBuilderPaletteEle
                         rUser = new FormRow();
                         rUser.setProperty("firstName",user.getFirstName());
                         rUser.setProperty("lastName",user.getLastName());
-                        if(user.getProfilePicture() != null) {
-                            try {
-                                blobLength = (int) user.getProfilePicture().length();
-                                byte[] blobAsBytes = user.getProfilePicture().getBytes(1, blobLength);
-                                pp = Base64.getEncoder().encodeToString(blobAsBytes);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        }
                     }
                 }
                 if(!pp.isEmpty()){

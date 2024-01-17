@@ -1,7 +1,8 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnarastudio.kecakplugins.audittrail.form;
 
-import com.kinnara.kecakplugins.audittrail.generators.ActivityOptionsGenerator;
-import com.kinnara.kecakplugins.audittrail.generators.OptionsGenerator;
+import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
+import com.kinnarastudio.kecakplugins.audittrail.generators.ActivityOptionsGenerator;
+import com.kinnarastudio.kecakplugins.audittrail.generators.OptionsGenerator;
 import com.kinnarastudio.commons.Try;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;

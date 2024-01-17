@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail;
+package com.kinnarastudio.kecakplugins.audittrail.form;
 
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.model.AppDefinition;
@@ -110,7 +110,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
     @Override
     public String getLabel() {
-        return "Audit Trail";
+        return "Audit Trail Table";
     }
 
     @Override

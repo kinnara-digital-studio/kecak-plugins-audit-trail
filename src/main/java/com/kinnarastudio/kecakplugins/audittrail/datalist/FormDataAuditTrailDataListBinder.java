@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail.datalist;
+package com.kinnarastudio.kecakplugins.audittrail.datalist;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONStream;

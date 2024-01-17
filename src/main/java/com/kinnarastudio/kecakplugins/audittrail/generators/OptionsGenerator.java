@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.audittrail.generators;
+package com.kinnarastudio.kecakplugins.audittrail.generators;
 
 import org.joget.apps.form.model.FormRow;
 
