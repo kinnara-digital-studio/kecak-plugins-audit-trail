@@ -14,6 +14,7 @@ import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormDataAuditTrail;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
@@ -94,7 +95,9 @@ public class FormDataAuditTrailDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

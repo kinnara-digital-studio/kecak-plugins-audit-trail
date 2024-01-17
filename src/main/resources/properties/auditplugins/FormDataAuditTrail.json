@@ -1,0 +1,13 @@
+[
+  {
+    "title": "Form Data Audit Trail",
+    "properties": [
+      {
+        "name": "formDefId",
+        "type": "multiselect",
+        "label": "@@datalist.formrowdatalistbinder.formId@@",
+        "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/formsWithCustomTable/options"
+      }
+    ]
+  }
+]

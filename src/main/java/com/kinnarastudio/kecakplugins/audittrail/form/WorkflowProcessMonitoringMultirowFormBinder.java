@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
+public class WorkflowProcessMonitoringMultirowFormBinder extends FormBinder
         implements FormLoadBinder, FormLoadMultiRowElementBinder, PluginWebSupport {
 
     public enum Fields {
@@ -246,7 +246,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getLabel() {
-        return "Audit Tail Monitoring Multirow Load Binder";
+        return "Workflow Process Monitoring Multirow Load Binder";
     }
 
     @Override
@@ -294,7 +294,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 alsoDislpayToolProperty.toString().replaceAll("\"", "'"),
                 excludeActivityProperty.toString().replaceAll("\"", "'")
         };
-        return AppUtil.readPluginResource(getClassName(), "/properties/AuditTrailMonitoringMultirowLoadBinder.json", args, false, "/messages/AuditTrailMonitoringMultirowFormBinder");
+        return AppUtil.readPluginResource(getClassName(), "/properties/WorkflowProcessMonitoringMultirowLoadBinder.json", args, false, "/messages/WorkflowProcessMonitoringMultirowFormBinder");
     }
 
     /**

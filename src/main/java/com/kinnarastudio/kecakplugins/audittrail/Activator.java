@@ -3,7 +3,7 @@ package com.kinnarastudio.kecakplugins.audittrail;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.kinnarastudio.kecakplugins.audittrail.auditplugins.ElementValueChangesAuditTrail;
+import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataAuditTrail;
 import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataDaoOnSaveOrUpdateAuditTrail;
 import com.kinnarastudio.kecakplugins.audittrail.datalist.AuditTrailConsoleDataListBinder;
 import com.kinnarastudio.kecakplugins.audittrail.datalist.FormDataAuditTrailDataListBinder;
@@ -20,14 +20,11 @@ public class Activator implements BundleActivator {
         registrationList = new ArrayList<ServiceRegistration>();
 
         //Register plugin here
-        registrationList.add(context.registerService(AuditTrailFormBinder.class.getName(), new AuditTrailFormBinder(), null));
         registrationList.add(context.registerService(AuditTrailFormTableElement.class.getName(), new AuditTrailFormTableElement(), null));
-        registrationList.add(context.registerService(AuditTrailMultirowLoadBinder.class.getName(), new AuditTrailMultirowLoadBinder(), null));
-        registrationList.add(context.registerService(AuditTrailFormCollector.class.getName(), new AuditTrailFormCollector(), null));
-        registrationList.add(context.registerService(AuditTrailMonitoringMultirowFormBinder.class.getName(), new AuditTrailMonitoringMultirowFormBinder(), null));
+        registrationList.add(context.registerService(WorkflowProcessMonitoringMultirowFormBinder.class.getName(), new WorkflowProcessMonitoringMultirowFormBinder(), null));
         registrationList.add(context.registerService(AuditTrailProgress.class.getName(), new AuditTrailProgress(), null));
         registrationList.add(context.registerService(FormDataDaoOnSaveOrUpdateAuditTrail.class.getName(), new FormDataDaoOnSaveOrUpdateAuditTrail(), null));
-        registrationList.add(context.registerService(ElementValueChangesAuditTrail.class.getName(), new ElementValueChangesAuditTrail(), null));
+        registrationList.add(context.registerService(FormDataAuditTrail.class.getName(), new FormDataAuditTrail(), null));
         registrationList.add(context.registerService(ElementValueChangesMultirowLoadBinder.class.getName(), new ElementValueChangesMultirowLoadBinder(), null));
         registrationList.add(context.registerService(FormDataAuditTrailDataListBinder.class.getName(), new FormDataAuditTrailDataListBinder(), null));
         registrationList.add(context.registerService(AuditTrailConsoleDataListBinder.class.getName(), new AuditTrailConsoleDataListBinder(), null));

@@ -50,7 +50,7 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
     @Override
     public Object execute(Map map) {
         final AuditTrail callerAuditTrail = (AuditTrail) map.get("auditTrail");
-        if (!isEnabled() || !callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
+        if (!callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
             return null;
         }
 
@@ -101,7 +101,6 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
                 auditTrail.setMessage(message);
 
                 auditTrailDao.addAuditTrail(auditTrail);
-
             });
         });
 

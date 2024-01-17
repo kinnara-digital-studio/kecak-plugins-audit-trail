@@ -120,7 +120,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
 
     @Override
     public String getPropertyOptions() {
-        List<Map<String, String>> monitoringOptions = Arrays.stream(AuditTrailMonitoringMultirowFormBinder.Fields.values())
+        List<Map<String, String>> monitoringOptions = Arrays.stream(WorkflowProcessMonitoringMultirowFormBinder.Fields.values())
                 .collect(ArrayList::new, (list, field) -> {
                     Map<String, String> map = new HashMap<>();
                     map.put("value", field.toString());
@@ -150,9 +150,9 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
         }
 
         String[] args = {
-                AuditTrailMultirowLoadBinder.class.getName(),
-                AuditTrailMonitoringMultirowFormBinder.class.getName(),
-                AuditTrailMonitoringMultirowFormBinder.class.getName(),
+                WorkflowProcessMonitoringMultirowFormBinder.class.getName(),
+                WorkflowProcessMonitoringMultirowFormBinder.class.getName(),
+                WorkflowProcessMonitoringMultirowFormBinder.class.getName(),
                 new JSONArray(monitoringOptions).toString().replaceAll("\"", "'")
         };
         return AppUtil.readPluginResource(getClass().getName(), "/properties/AuditTrailFormElement.json", args, true, "/messages/AuditTrailFormElement");
@@ -191,7 +191,7 @@ public class AuditTrailFormTableElement extends Element implements FormBuilderPa
     public Map<String, String>[] getColumnProperties() {
         Map<String, Object> loadBinder = (Map<String, Object>) getProperty("loadBinder");
 
-        return Optional.of(AuditTrailMonitoringMultirowFormBinder.class.getName().equals(loadBinder.get("className")) ? "monitoringColumns" : "columns")
+        return Optional.of(WorkflowProcessMonitoringMultirowFormBinder.class.getName().equals(loadBinder.get("className")) ? "monitoringColumns" : "columns")
                 .map(this::getProperty)
                 .map(o -> (Object[]) o)
                 .map(Arrays::stream)

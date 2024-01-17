@@ -1,10 +1,9 @@
 package com.kinnarastudio.kecakplugins.audittrail.auditplugins;
 
 import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
-import org.joget.apps.app.dao.AuditTrailDao;
 import org.joget.apps.app.model.AuditTrail;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.dao.FormDataAuditTrailDao;
 import org.joget.apps.form.dao.FormDataDaoImpl;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormRowSet;
@@ -13,22 +12,17 @@ import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultAuditTrailPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.json.JSONObject;
+import org.springframework.context.ApplicationContext;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Store data row into audit trail table as json
  */
-public class ElementValueChangesAuditTrail extends DefaultAuditTrailPlugin {
-    final public static String LABEL = "Element Value Changes On saveOrUpdate";
-    final public static String KEY_FORM_ID = "formDefId";
-    final public static String KEY_TABLE_FORM = "tableForm";
-
+public class FormDataAuditTrail extends DefaultAuditTrailPlugin {
+    final public static String LABEL = "Form Data Audit Trail";
     @Override
     public String getName() {
         return LABEL;
@@ -48,12 +42,13 @@ public class ElementValueChangesAuditTrail extends DefaultAuditTrailPlugin {
 
     @Override
     public Object execute(Map map) {
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final FormDataAuditTrailDao formDataAuditTrailDao = (FormDataAuditTrailDao) applicationContext.getBean("formDataAuditTrailDao");
+
         final AuditTrail callerAuditTrail = (AuditTrail) map.get("auditTrail");
-        if (!isEnabled() || !callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
+        if (!callerAuditTrail.getClazz().equals(FormDataDaoImpl.class.getName()) || !callerAuditTrail.getMethod().equals("saveOrUpdate")) {
             return null;
         }
-
-        final AuditTrailDao auditTrailDao = AuditTrailUtil.getAuditTrailDao();
 
         final String formId;
         final String formTable;
@@ -74,27 +69,24 @@ public class ElementValueChangesAuditTrail extends DefaultAuditTrailPlugin {
             return null;
         }
 
-        rowSet.forEach(Try.onConsumer(row -> {
-            final JSONObject json = new JSONObject(row);
+        if(shouldHandleThisForm(formId)) {
+            rowSet.forEach(Try.onConsumer(row -> {
+                final JSONObject json = new JSONObject(row);
 
-            json.put(KEY_FORM_ID, formId);
-            json.put(KEY_TABLE_FORM, formTable);
+                final org.joget.apps.form.model.FormDataAuditTrail formDataAuditTrail = new org.joget.apps.form.model.FormDataAuditTrail();
+                formDataAuditTrail.setId(UUID.randomUUID().toString());
+                formDataAuditTrail.setAppId(callerAuditTrail.getAppId());
+                formDataAuditTrail.setAppVersion(callerAuditTrail.getAppVersion());
+                formDataAuditTrail.setFormId(formId);
+                formDataAuditTrail.setAction(callerAuditTrail.getMethod());
+                formDataAuditTrail.setTableName(formTable);
+                formDataAuditTrail.setDatetime(callerAuditTrail.getTimestamp());
+                formDataAuditTrail.setUsername(callerAuditTrail.getUsername());
+                formDataAuditTrail.setData(json.toString());
 
-            final AuditTrail auditTrail = new AuditTrail();
-            auditTrail.setUsername(callerAuditTrail.getUsername());
-            auditTrail.setClazz(callerAuditTrail.getClazz());
-            auditTrail.setMethod(callerAuditTrail.getMethod());
-            auditTrail.setParamTypes(callerAuditTrail.getParamTypes());
-            auditTrail.setArgs(callerAuditTrail.getArgs());
-            auditTrail.setReturnObject(callerAuditTrail.getReturnObject());
-            auditTrail.setTimestamp(callerAuditTrail.getTimestamp());
-            auditTrail.setAppDef(callerAuditTrail.getAppDef());
-            auditTrail.setAppId(callerAuditTrail.getAppId());
-            auditTrail.setAppVersion(callerAuditTrail.getAppVersion());
-            auditTrail.setMessage(json.toString());
-
-            auditTrailDao.addAuditTrail(auditTrail);
-        }));
+                formDataAuditTrailDao.addAuditTrail(formDataAuditTrail);
+            }));
+        }
 
         return null;
     }
@@ -111,10 +103,27 @@ public class ElementValueChangesAuditTrail extends DefaultAuditTrailPlugin {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/auditplugins/ElementFormDataDaoOnSaveOrUpdateAuditTrail.json", null, true, "messages/auditplugins/FormDataDaoOnSaveOrUpdateAuditTrail");
+        return AppUtil.readPluginResource(getClassName(), "/properties/auditplugins/FormDataAuditTrail.json", null, true, "messages/auditplugins/FormDataDaoOnSaveOrUpdateAuditTrail");
     }
 
-    protected boolean isEnabled() {
-        return "true".equalsIgnoreCase(getPropertyString("enable"));
+    protected Set<String> getFormDefIds() {
+        return Optional.of(getPropertyString("formDefId"))
+                .map(s -> s.split(";"))
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+    }
+
+
+    /**
+     * Should handle [formDefId] form?
+     *
+     * @param formDefId
+     * @return
+     */
+    protected boolean shouldHandleThisForm(String formDefId) {
+        final Collection<String> forms = getFormDefIds();
+        return forms.isEmpty() || forms.contains(formDefId);
     }
 }
