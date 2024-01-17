@@ -2,9 +2,7 @@ package com.kinnarastudio.kecakplugins.audittrail.form;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.audittrail.AuditTrailUtil;
-import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataAuditTrail;
-import org.joget.apps.app.dao.AuditTrailDao;
+import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataAuditTrailPlugin;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataAuditTrailDao;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Load data saved by {@link FormDataAuditTrail}
+ * Load data saved by {@link FormDataAuditTrailPlugin}
  */
 public class ElementValueChangesMultirowLoadBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
     public final static String LABEL = "Element Value Changes Load Binder";
@@ -75,7 +73,7 @@ public class ElementValueChangesMultirowLoadBinder extends FormBinder implements
         final FormRowSet rowSet = Optional.ofNullable(formDataAuditTrailDao.getAuditTrails(condition, args, "datetime", true, null, null))
                 .map(Collection::stream)
                 .orElseGet(Stream::empty)
-                .map(org.joget.apps.form.model.FormDataAuditTrail::getData)
+                .map(FormDataAuditTrail::getData)
                 .map(Try.onFunction(JSONObject::new, (JSONException ignored) -> null))
                 .filter(Objects::nonNull)
                 .filter(Try.onPredicate(json -> {

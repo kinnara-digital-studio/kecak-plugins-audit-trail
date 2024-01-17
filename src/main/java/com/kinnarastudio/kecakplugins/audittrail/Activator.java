@@ -3,7 +3,7 @@ package com.kinnarastudio.kecakplugins.audittrail;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataAuditTrail;
+import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataAuditTrailPlugin;
 import com.kinnarastudio.kecakplugins.audittrail.auditplugins.FormDataDaoOnSaveOrUpdateAuditTrail;
 import com.kinnarastudio.kecakplugins.audittrail.datalist.AuditTrailConsoleDataListBinder;
 import com.kinnarastudio.kecakplugins.audittrail.datalist.FormDataAuditTrailDataListBinder;
@@ -24,7 +24,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(WorkflowProcessMonitoringMultirowFormBinder.class.getName(), new WorkflowProcessMonitoringMultirowFormBinder(), null));
         registrationList.add(context.registerService(AuditTrailProgress.class.getName(), new AuditTrailProgress(), null));
         registrationList.add(context.registerService(FormDataDaoOnSaveOrUpdateAuditTrail.class.getName(), new FormDataDaoOnSaveOrUpdateAuditTrail(), null));
-        registrationList.add(context.registerService(FormDataAuditTrail.class.getName(), new FormDataAuditTrail(), null));
+        registrationList.add(context.registerService(FormDataAuditTrailPlugin.class.getName(), new FormDataAuditTrailPlugin(), null));
         registrationList.add(context.registerService(ElementValueChangesMultirowLoadBinder.class.getName(), new ElementValueChangesMultirowLoadBinder(), null));
         registrationList.add(context.registerService(FormDataAuditTrailDataListBinder.class.getName(), new FormDataAuditTrailDataListBinder(), null));
         registrationList.add(context.registerService(AuditTrailConsoleDataListBinder.class.getName(), new AuditTrailConsoleDataListBinder(), null));

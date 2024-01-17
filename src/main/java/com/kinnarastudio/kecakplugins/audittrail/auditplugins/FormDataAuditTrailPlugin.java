@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 /**
  * Store data row into audit trail table as json
  */
-public class FormDataAuditTrail extends DefaultAuditTrailPlugin {
-    final public static String LABEL = "Form Data Audit Trail";
+public class FormDataAuditTrailPlugin extends DefaultAuditTrailPlugin {
+    final public static String LABEL = "Form Data Audit Trail Plugin";
     @Override
     public String getName() {
         return LABEL;
@@ -103,7 +103,7 @@ public class FormDataAuditTrail extends DefaultAuditTrailPlugin {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/auditplugins/FormDataAuditTrail.json", null, true, "messages/auditplugins/FormDataDaoOnSaveOrUpdateAuditTrail");
+        return AppUtil.readPluginResource(getClassName(), "/properties/auditplugins/FormDataAuditTrailPlugin.json", null, true, "messages/auditplugins/FormDataDaoOnSaveOrUpdateAuditTrail");
     }
 
     protected Set<String> getFormDefIds() {
