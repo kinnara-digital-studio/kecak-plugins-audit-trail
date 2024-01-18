@@ -8,20 +8,22 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.dao.FormDataAuditTrailDao;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.plugin.base.PluginManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Load data saved by {@link FormDataAuditTrailPlugin}
  */
-public class ElementValueChangesMultirowLoadBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
-    public final static String LABEL = "Element Value Changes Load Binder";
+public class ElementValueHistoryMultirowLoadBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
+    public final static String LABEL = "Element Value History Load Binder";
 
     @Override
     public String getName() {
@@ -30,7 +32,9 @@ public class ElementValueChangesMultirowLoadBinder extends FormBinder implements
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
@@ -59,6 +63,9 @@ public class ElementValueChangesMultirowLoadBinder extends FormBinder implements
         final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
 
         final Form rootForm = FormUtil.findRootForm(element);
+        if(rootForm == null)
+            return null;
+
         final String formId = rootForm.getPropertyString(FormUtil.PROPERTY_ID);
         final String tableName = rootForm.getPropertyString(FormUtil.PROPERTY_TABLE_NAME);
 

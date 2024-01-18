@@ -25,7 +25,8 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(AuditTrailProgress.class.getName(), new AuditTrailProgress(), null));
         registrationList.add(context.registerService(FormDataDaoOnSaveOrUpdateAuditTrail.class.getName(), new FormDataDaoOnSaveOrUpdateAuditTrail(), null));
         registrationList.add(context.registerService(FormDataAuditTrailPlugin.class.getName(), new FormDataAuditTrailPlugin(), null));
-        registrationList.add(context.registerService(ElementValueChangesMultirowLoadBinder.class.getName(), new ElementValueChangesMultirowLoadBinder(), null));
+        registrationList.add(context.registerService(ElementValueHistoryMultirowLoadBinder.class.getName(), new ElementValueHistoryMultirowLoadBinder(), null));
+        registrationList.add(context.registerService(ElementValueHistoryField.class.getName(), new ElementValueHistoryField(), null));
         registrationList.add(context.registerService(FormDataAuditTrailDataListBinder.class.getName(), new FormDataAuditTrailDataListBinder(), null));
         registrationList.add(context.registerService(AuditTrailConsoleDataListBinder.class.getName(), new AuditTrailConsoleDataListBinder(), null));
     }
