@@ -3,22 +3,16 @@ package com.kinnarastudio.kecakplugins.audittrail.form;
 import com.kinnarastudio.commons.Declutter;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.UuidGenerator;
 import org.joget.directory.model.User;
 import org.joget.directory.model.service.DirectoryManager;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
-import org.joget.workflow.util.WorkflowUtil;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
 import java.text.DateFormat;
@@ -101,7 +95,7 @@ public class ElementValueHistoryField extends Element implements FormBuilderPale
     public String getPropertyOptions() {
         String[] args = new String[] {
                 FormLoadMultiRowElementBinder.class.getName(),
-                ElementValueHistoryMultirowLoadBinder.class.getName(),
+                FormDataAuditTrailMultirowLoadBinder.class.getName(),
                 getDefaultMessage()
         };
         return AppUtil.readPluginResource(getClassName(), "/properties/form/ElementValueHistoryField.json", args, true, "/messages/form/ElementValueHistoryField").replaceAll("\"", "'");

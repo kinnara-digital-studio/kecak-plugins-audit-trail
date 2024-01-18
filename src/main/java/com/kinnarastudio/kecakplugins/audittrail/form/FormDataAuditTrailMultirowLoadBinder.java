@@ -22,8 +22,8 @@ import java.util.stream.Stream;
 /**
  * Load data saved by {@link FormDataAuditTrailPlugin}
  */
-public class ElementValueHistoryMultirowLoadBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
-    public final static String LABEL = "Element Value History Load Binder";
+public class FormDataAuditTrailMultirowLoadBinder extends FormBinder implements FormLoadBinder, FormLoadMultiRowElementBinder {
+    public final static String LABEL = "Form Data Audit Trail Load Binder";
 
     @Override
     public String getName() {
