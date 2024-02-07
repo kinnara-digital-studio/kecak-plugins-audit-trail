@@ -61,12 +61,12 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
         final FormRowSet rowSet;
 
         final Object[] args = callerAuditTrail.getArgs();
-        if(args.length == 2) {
+        if(args[0] instanceof Form && args[1] instanceof FormRowSet) {
             final Form form = (Form) callerAuditTrail.getArgs()[0];
             formId = form.getPropertyString(FormUtil.PROPERTY_ID);
             formTable = form.getPropertyString(FormUtil.PROPERTY_TABLE_NAME);
             rowSet = (FormRowSet) callerAuditTrail.getArgs()[1];
-        } else if(args.length == 3){
+        } else if(args[0] instanceof String && args[1] instanceof String && args[2] instanceof FormRowSet){
             formId = (String) callerAuditTrail.getArgs()[0];
             formTable = (String) callerAuditTrail.getArgs()[1];
             rowSet = (FormRowSet) callerAuditTrail.getArgs()[2];
