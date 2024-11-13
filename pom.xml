@@ -8,9 +8,9 @@
     <url>http://www.kecak.org</url>
     <version>3.0.0</version>
     <scm>
-        <connection>scm:git:ssh://git@gitlab.com:kinnarastudio/kecak-plugins-audit-trail.git</connection>
-        <developerConnection>scm:git:ssh://git@gitlab.com:kinnarastudio/kecak-plugins-audit-trail.git</developerConnection>
-        <url>ssh://git@gitlab.com:kinnarastudio/kecak-plugins-audit-trail.git</url>
+        <connection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-audit-trail.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-audit-trail.git</developerConnection>
+        <url>ssh://git@github.com:kinnara-digital-studio/kecak-plugins-audit-trail.git</url>
         <tag>HEAD</tag>
     </scm>
     <build>
