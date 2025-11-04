@@ -61,11 +61,6 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
 
         final Object[] args = callerAuditTrail.getArgs();
 
-        LogUtil.info(getClassName(), "args.length [" + args.length + "]");
-        for (Object arg : args) {
-            LogUtil.info(getClassName(), "arg [" + arg.getClass().getName() + "]");
-        }
-
         if(args.length == 2 && args[0] instanceof Form && args[1] instanceof FormRowSet) {
             final Form form = (Form) callerAuditTrail.getArgs()[0];
             formId = form.getPropertyString(FormUtil.PROPERTY_ID);
