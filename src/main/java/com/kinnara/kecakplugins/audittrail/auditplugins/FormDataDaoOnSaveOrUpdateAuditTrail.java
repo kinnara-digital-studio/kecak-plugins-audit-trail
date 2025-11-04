@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin {
     final Collection<String> IGNORED_FIELDS = Collections.unmodifiableCollection(Arrays.asList(
             FormUtil.PROPERTY_ID,
-            FormUtil.PROPERTY_ORG_ID,
             FormUtil.PROPERTY_DATE_CREATED,
             FormUtil.PROPERTY_CREATED_BY,
             FormUtil.PROPERTY_DATE_MODIFIED,
@@ -61,12 +60,18 @@ public class FormDataDaoOnSaveOrUpdateAuditTrail extends DefaultAuditTrailPlugin
         final FormRowSet rowSet;
 
         final Object[] args = callerAuditTrail.getArgs();
-        if(args[0] instanceof Form && args[1] instanceof FormRowSet) {
+
+        LogUtil.info(getClassName(), "args.length [" + args.length + "]");
+        for (Object arg : args) {
+            LogUtil.info(getClassName(), "arg [" + arg.getClass().getName() + "]");
+        }
+
+        if(args.length == 2 && args[0] instanceof Form && args[1] instanceof FormRowSet) {
             final Form form = (Form) callerAuditTrail.getArgs()[0];
             formId = form.getPropertyString(FormUtil.PROPERTY_ID);
             formTable = form.getPropertyString(FormUtil.PROPERTY_TABLE_NAME);
             rowSet = (FormRowSet) callerAuditTrail.getArgs()[1];
-        } else if(args[0] instanceof String && args[1] instanceof String && args[2] instanceof FormRowSet){
+        } else if(args.length == 3 && args[0] instanceof String && args[1] instanceof String && args[2] instanceof FormRowSet){
             formId = (String) callerAuditTrail.getArgs()[0];
             formTable = (String) callerAuditTrail.getArgs()[1];
             rowSet = (FormRowSet) callerAuditTrail.getArgs()[2];
