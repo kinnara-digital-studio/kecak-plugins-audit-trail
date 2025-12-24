@@ -15,6 +15,8 @@ import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.base.PluginWebSupport;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowProcess;
+import org.joget.workflow.model.WorkflowProcessLink;
+import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.dao.WorkflowProcessLinkDao;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
@@ -36,41 +38,7 @@ import java.util.stream.Stream;
 public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         implements FormLoadBinder, FormLoadMultiRowElementBinder, PluginWebSupport {
 
-    public enum Fields {
-
-        ID("_id", "ID"),
-        PROCESS_ID("_processId", "Process ID"),
-        PROCESS_NAME("_processName", "Process Name"),
-        ACTIVITY_ID("_activityId", "Activity ID"),
-        ACTIVITY_NAME("_activityName", "Activity Name"),
-        CREATED_TIME("_createdTime", "Created Time"),
-        FINISH_TIME("_finishTime", "Finish Time"),
-        USERNAME("_username", "Username"),
-        USER_FULLNAME("_userFullname", "User Full Name"),
-
-        USER_FIRST_NAME("_userFirstName", "User First Name"),
-        PARTICIPANT("_participantId", "Participant");
-
-        private String name;
-        private String label;
-
-        Fields(String name, String label) {
-            this.name = name;
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public String toString() {
-            return name;
-        }
-    }
-
-
     public final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
     private Date keepCreatedDate = null;
 
     @Override
@@ -91,20 +59,21 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
         return Utilities.getFromCache(cacheKey, () -> {
             final ApplicationContext appContext = AppUtil.getApplicationContext();
             final WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
-            final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
 
             final FormRowSet rowSet = Optional.of(primaryKey)
                     .map(workflowProcessLinkDao::getLinks)
                     .map(Collection::stream)
                     .orElseGet(Stream::empty)
                     .filter(Objects::nonNull)
-                    .map(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null))
+                    .map(WorkflowProcessLink::getProcessId)
+                    .map(this::getActivityList)
                     .filter(Objects::nonNull)
                     .flatMap(Collection::stream)
 
                     // only handle activity
                     .filter(activity -> {
-                        final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                        final WorkflowActivity definition = getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+
                         if (definition == null)
                             return false;
 
@@ -126,11 +95,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         final FormRowSet formRowSet = new FormRowSet();
 
                         if (!isToolAsStartProcess()) {
-                            final WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                            final WorkflowProcess info = Optional.ofNullable(process)
-                                    .map(WorkflowProcess::getInstanceId)
-                                    .map(workflowManager::getRunningProcessInfo)
-                                    .orElse(null);
+                            final WorkflowProcess process = getRunningProcessById(primaryKey);
+                            final WorkflowProcess info = getRunningProcessInfo(primaryKey);
 
                             final FormRow row = new FormRow();
                             row.setId(process == null || process.getId() == null ? "" : process.getId());
@@ -153,8 +119,9 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         }
                         return formRowSet;
                     }, (rows, activity) -> {
-                        final WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
-                        final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                        final WorkflowActivity info = getRunningActivityInfo(activity.getId());
+                        final WorkflowActivity definition = getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+
                         final FormRow row = new FormRow();
 
                         if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
@@ -181,7 +148,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                             row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
 
                             if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
-                                WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                                WorkflowProcess process = getRunningProcessById(primaryKey);
+
                                 row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
                                 row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
                                 row.setProperty(Fields.USER_FIRST_NAME.toString(), mapUsernameToFirstName(process.getRequesterId()));
@@ -208,7 +176,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         // no need to show variables value of current assignment
                         boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
                         if (!isCurrentAssignment) {
-                            row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
+                            row.putAll(getActivityVariableList(activity.getId()).stream()
                                     .collect(
                                             FormRow::new,
                                             (formRow, workflowVariable) -> {
@@ -218,7 +186,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                             FormRow::putAll));
                         } else {
                             mapPendingValues.putAll(pendingValues);
-                            row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
+                            row.putAll(getActivityVariableList(activity.getId()).stream()
                                     .collect(
                                             FormRow::new,
                                             (formRow, workflowVariable) -> {
@@ -238,7 +206,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
 
     @Override
     public String getName() {
-        return getLabel() + getVersion();
+        return getLabel();
     }
 
     @Override
@@ -350,7 +318,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             return user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : "");
         }
     }
-    
+
     protected String mapUsernameToFirstName(String username) {
         final ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
         User user = directoryManager.getUserByUsername(username);
@@ -414,7 +382,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
      */
     @Nonnull
     protected Map<String, String> getStartProcessValues() {
-        return Optional.ofNullable((Object[])getProperty("startProcessValues"))
+        return Optional.ofNullable((Object[]) getProperty("startProcessValues"))
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
                 .map(o -> (Map<String, Object>) o)
@@ -427,5 +395,115 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 .orElseGet(Stream::empty)
                 .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> String.valueOf(m.getOrDefault("columnId", "")), m -> AppUtil.processHashVariable(m.getOrDefault("columnValue", "").toString(), null, null, null)));
+    }
+
+    protected WorkflowProcess getRunningProcessById(String primaryKey) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        String cacheKey = String.join("::", WorkflowManager.class.getName(), "getRunningProcessById", primaryKey);
+        return Utilities.getFromCache(cacheKey, () -> workflowManager.getRunningProcessById(primaryKey));
+    }
+
+    protected WorkflowProcess getRunningProcessInfo(String primaryKey) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        WorkflowProcess process = getRunningProcessById(primaryKey);
+
+        String cacheKey = String.join("::", WorkflowManager.class.getName(), "getRunningProcessInfo", process == null ? "null" : process.getInstanceId());
+
+        return Utilities.getFromCache(cacheKey, () -> Optional.ofNullable(process)
+                .map(WorkflowProcess::getInstanceId)
+                .map(workflowManager::getRunningProcessInfo)
+                .orElse(null));
+    }
+
+    protected WorkflowActivity getRunningActivityInfo(String activityId) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        String cacheKey = String.join("::",
+                WorkflowManager.class.getName(),
+                "getRunningActivityInfo",
+                activityId
+        );
+
+        return Utilities.getFromCache(cacheKey, () -> workflowManager.getRunningActivityInfo(activityId));
+    }
+
+    protected WorkflowActivity getProcessActivityDefinition(String processDefId, String activityDefId) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        String cacheKey = String.join("::",
+                WorkflowManager.class.getName(),
+                "getProcessActivityDefinition",
+                processDefId,
+                activityDefId
+        );
+
+        return Utilities.getFromCache(cacheKey, () -> workflowManager.getProcessActivityDefinition(processDefId, activityDefId));
+    }
+
+    protected Collection<WorkflowVariable> getActivityVariableList(String activityId) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        String cacheKey = String.join("::",
+                WorkflowManager.class.getName(),
+                "getProcessActivityDefinition",
+                activityId
+        );
+        return Utilities.getFromCache(cacheKey, () -> workflowManager.getActivityVariableList(activityId));
+    }
+
+    protected Collection<WorkflowActivity> getActivityList(String processId) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+
+        String cacheKey = String.join("::",
+                WorkflowManager.class.getName(),
+                "getActivityList",
+                processId,
+                null,
+                String.valueOf(1000),
+                null,
+                null
+        );
+
+        return Utilities.getFromCache(cacheKey, () -> workflowManager.getActivityList(processId, null, 1000, null, null));
+    }
+
+    public enum Fields {
+
+        ID("_id", "ID"),
+        PROCESS_ID("_processId", "Process ID"),
+        PROCESS_NAME("_processName", "Process Name"),
+        ACTIVITY_ID("_activityId", "Activity ID"),
+        ACTIVITY_NAME("_activityName", "Activity Name"),
+        CREATED_TIME("_createdTime", "Created Time"),
+        FINISH_TIME("_finishTime", "Finish Time"),
+        USERNAME("_username", "Username"),
+        USER_FULLNAME("_userFullname", "User Full Name"),
+
+        USER_FIRST_NAME("_userFirstName", "User First Name"),
+        PARTICIPANT("_participantId", "Participant");
+
+        private String name;
+        private String label;
+
+        Fields(String name, String label) {
+            this.name = name;
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String toString() {
+            return name;
+        }
     }
 }
