@@ -2,6 +2,7 @@ package com.kinnara.kecakplugins.audittrail;
 
 import com.kinnara.kecakplugins.audittrail.generators.ActivityOptionsGenerator;
 import com.kinnara.kecakplugins.audittrail.generators.OptionsGenerator;
+import com.kinnara.kecakplugins.audittrail.util.Utilities;
 import com.kinnarastudio.commons.Try;
 import org.enhydra.shark.api.common.SharkConstants;
 import org.joget.apps.app.model.AppDefinition;
@@ -80,150 +81,159 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
             return null;
         }
 
-        final ApplicationContext appContext = AppUtil.getApplicationContext();
-        final WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
-        final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+        String cacheKey = String.join("::",
+                getClassName(),
+                "load",
+                element.getPropertyString(FormUtil.PROPERTY_ID),
+                primaryKey
+        );
 
-        final FormRowSet rowSet = Optional.of(primaryKey)
-                .map(workflowProcessLinkDao::getLinks)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
-                .filter(Objects::nonNull)
-                .map(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null))
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
+        return Utilities.getFromCache(cacheKey, () -> {
+            final ApplicationContext appContext = AppUtil.getApplicationContext();
+            final WorkflowProcessLinkDao workflowProcessLinkDao = (WorkflowProcessLinkDao) appContext.getBean("workflowProcessLinkDao");
+            final WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
 
-                // only handle activity
-                .filter(activity -> {
-                    final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
-                    if (definition == null)
-                        return false;
+            final FormRowSet rowSet = Optional.of(primaryKey)
+                    .map(workflowProcessLinkDao::getLinks)
+                    .map(Collection::stream)
+                    .orElseGet(Stream::empty)
+                    .filter(Objects::nonNull)
+                    .map(l -> workflowManager.getActivityList(l.getProcessId(), null, 1000, null, null))
+                    .filter(Objects::nonNull)
+                    .flatMap(Collection::stream)
 
-                    return (isActivity(definition) && !isInExcludedActivity(definition))
-                            || (isTool(definition) && (isToolAsStartProcess() && isStartProcessTool(definition) || isInAlsoDisplayTools(definition)));
-                })
+                    // only handle activity
+                    .filter(activity -> {
+                        final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                        if (definition == null)
+                            return false;
 
-                // only show unaborted activity
+                        return (isActivity(definition) && !isInExcludedActivity(definition))
+                                || (isTool(definition) && (isToolAsStartProcess() && isStartProcessTool(definition) || isInAlsoDisplayTools(definition)));
+                    })
+
+                    // only show unaborted activity
 //                .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
 
-                .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
+                    .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
 
-                // if property showPendingValue is checked, then display open assignment
-                .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
-                        || Optional.of(activity).map(WorkflowActivity::getState).map(s -> !s.startsWith(SharkConstants.STATEPREFIX_OPEN)).orElse(false))
+                    // if property showPendingValue is checked, then display open assignment
+                    .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
+                            || Optional.of(activity).map(WorkflowActivity::getState).map(s -> !s.startsWith(SharkConstants.STATEPREFIX_OPEN)).orElse(false))
 
-                .collect(() -> {
-                    // handle first record, get from process
-                    final FormRowSet formRowSet = new FormRowSet();
+                    .collect(() -> {
+                        // handle first record, get from process
+                        final FormRowSet formRowSet = new FormRowSet();
 
-                    if (!isToolAsStartProcess()) {
-                        final WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                        final WorkflowProcess info = Optional.ofNullable(process)
-                                .map(WorkflowProcess::getInstanceId)
-                                .map(workflowManager::getRunningProcessInfo)
-                                .orElse(null);
+                        if (!isToolAsStartProcess()) {
+                            final WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                            final WorkflowProcess info = Optional.ofNullable(process)
+                                    .map(WorkflowProcess::getInstanceId)
+                                    .map(workflowManager::getRunningProcessInfo)
+                                    .orElse(null);
 
-                        final FormRow row = new FormRow();
-                        row.setId(process == null || process.getId() == null ? "" : process.getId());
-                        row.setProperty(Fields.ID.toString(), row.getId());
-                        row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
-                        row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
-                        row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
-                        row.setProperty(Fields.ACTIVITY_NAME.toString(), "Start Process");
-                        row.setProperty(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime()));
-                        row.setProperty(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime())); // for start process this should be the same
-                        row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
-                        row.setProperty(Fields.USER_FULLNAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFullUsername).orElse(""));
-                        row.setProperty(Fields.USER_FIRST_NAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFirstName).orElse(""));
+                            final FormRow row = new FormRow();
+                            row.setId(process == null || process.getId() == null ? "" : process.getId());
+                            row.setProperty(Fields.ID.toString(), row.getId());
+                            row.setProperty(Fields.PROCESS_ID.toString(), process == null || process.getId() == null ? "" : process.getId());
+                            row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
+                            row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
+                            row.setProperty(Fields.ACTIVITY_NAME.toString(), "Start Process");
+                            row.setProperty(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime()));
+                            row.setProperty(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime())); // for start process this should be the same
+                            row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
+                            row.setProperty(Fields.USER_FULLNAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFullUsername).orElse(""));
+                            row.setProperty(Fields.USER_FIRST_NAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFirstName).orElse(""));
 
-                        final Map<String, String> startProcessValues = getStartProcessValues();
-                        startProcessValues.forEach(row::setProperty);
+                            final Map<String, String> startProcessValues = getStartProcessValues();
+                            startProcessValues.forEach(row::setProperty);
 
-                        // put first process
-                        formRowSet.add(row);
-                    }
-                    return formRowSet;
-                }, (rows, activity) -> {
-                    final WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
-                    final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
-                    final FormRow row = new FormRow();
-
-                    if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
-                        // keep aborted activity first data
-                        if (keepCreatedDate == null)
-                            keepCreatedDate = info.getCreatedTime();
-                        return;
-                    }
-
-                    row.setId(activity.getId());
-                    row.setProperty(Fields.ID.toString(), row.getId());
-                    row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
-                    row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
-                    row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
-                    row.setProperty(Fields.ACTIVITY_NAME.toString(), activity.getName());
-
-                    row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : info.getCreatedTime()));
-                    keepCreatedDate = null;
-
-                    if (info.getFinishTime() != null)
-                        row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
-
-                    if (isActivity(definition)) {
-                        row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
-
-                        if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
-                            WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
-                            row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
-                            row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
-                            row.setProperty(Fields.USER_FIRST_NAME.toString(), mapUsernameToFirstName(process.getRequesterId()));
-                        } else {
-                            row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                            row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
-                                    .filter(u -> !u.isEmpty())
-                                    .map(this::mapUsernameToFullUsername)
-                                    .filter(u -> !u.isEmpty())
-                                    .collect(Collectors.joining(","))
-                            );
-                            row.setProperty(Fields.USER_FIRST_NAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
-                                    .filter(u -> !u.isEmpty())
-                                    .map(this::mapUsernameToFirstName)
-                                    .filter(u -> !u.isEmpty())
-                                    .collect(Collectors.joining(","))
-                            );
+                            // put first process
+                            formRowSet.add(row);
                         }
-                    }
+                        return formRowSet;
+                    }, (rows, activity) -> {
+                        final WorkflowActivity info = workflowManager.getRunningActivityInfo(activity.getId());
+                        final WorkflowActivity definition = workflowManager.getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
+                        final FormRow row = new FormRow();
 
-                    final Map<String, String> mapPendingValues = new HashMap<>();
-                    final Map<String, String> pendingValues = getPendingValues();
+                        if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
+                            // keep aborted activity first data
+                            if (keepCreatedDate == null)
+                                keepCreatedDate = info.getCreatedTime();
+                            return;
+                        }
 
-                    // no need to show variables value of current assignment
-                    boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
-                    if (!isCurrentAssignment) {
-                        row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
-                                .collect(
-                                        FormRow::new,
-                                        (formRow, workflowVariable) -> {
-                                            String workflowVariableName = workflowVariable.getName();
-                                            formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : String.valueOf(workflowVariable.getVal()));
-                                        },
-                                        FormRow::putAll));
-                    } else {
-                        mapPendingValues.putAll(pendingValues);
-                        row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
-                                .collect(
-                                        FormRow::new,
-                                        (formRow, workflowVariable) -> {
-                                            String workflowVariableName = workflowVariable.getName();
-                                            formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : "");
-                                        },
-                                        FormRow::putAll));
-                    }
-                    rows.add(0, row);
-                }, FormRowSet::addAll);
+                        row.setId(activity.getId());
+                        row.setProperty(Fields.ID.toString(), row.getId());
+                        row.setProperty(Fields.PROCESS_ID.toString(), activity.getProcessDefId());
+                        row.setProperty(Fields.PROCESS_NAME.toString(), activity.getProcessName());
+                        row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
+                        row.setProperty(Fields.ACTIVITY_NAME.toString(), activity.getName());
 
-        rowSet.setMultiRow(true);
+                        row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : info.getCreatedTime()));
+                        keepCreatedDate = null;
 
-        return rowSet;
+                        if (info.getFinishTime() != null)
+                            row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
+
+                        if (isActivity(definition)) {
+                            row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
+
+                            if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
+                                WorkflowProcess process = workflowManager.getRunningProcessById(primaryKey);
+                                row.setProperty(Fields.USERNAME.toString(), process.getRequesterId());
+                                row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
+                                row.setProperty(Fields.USER_FIRST_NAME.toString(), mapUsernameToFirstName(process.getRequesterId()));
+                            } else {
+                                row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
+                                row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                        .filter(u -> !u.isEmpty())
+                                        .map(this::mapUsernameToFullUsername)
+                                        .filter(u -> !u.isEmpty())
+                                        .collect(Collectors.joining(","))
+                                );
+                                row.setProperty(Fields.USER_FIRST_NAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                        .filter(u -> !u.isEmpty())
+                                        .map(this::mapUsernameToFirstName)
+                                        .filter(u -> !u.isEmpty())
+                                        .collect(Collectors.joining(","))
+                                );
+                            }
+                        }
+
+                        final Map<String, String> mapPendingValues = new HashMap<>();
+                        final Map<String, String> pendingValues = getPendingValues();
+
+                        // no need to show variables value of current assignment
+                        boolean isCurrentAssignment = activity.getState().startsWith(SharkConstants.STATEPREFIX_OPEN);
+                        if (!isCurrentAssignment) {
+                            row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
+                                    .collect(
+                                            FormRow::new,
+                                            (formRow, workflowVariable) -> {
+                                                String workflowVariableName = workflowVariable.getName();
+                                                formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : String.valueOf(workflowVariable.getVal()));
+                                            },
+                                            FormRow::putAll));
+                        } else {
+                            mapPendingValues.putAll(pendingValues);
+                            row.putAll(workflowManager.getActivityVariableList(activity.getId()).stream()
+                                    .collect(
+                                            FormRow::new,
+                                            (formRow, workflowVariable) -> {
+                                                String workflowVariableName = workflowVariable.getName();
+                                                formRow.setProperty(workflowVariableName, mapPendingValues.containsKey(workflowVariableName) ? mapPendingValues.get(workflowVariableName) : "");
+                                            },
+                                            FormRow::putAll));
+                        }
+                        rows.add(0, row);
+                    }, FormRowSet::addAll);
+
+            rowSet.setMultiRow(true);
+
+            return rowSet;
+        });
     }
 
     @Override
