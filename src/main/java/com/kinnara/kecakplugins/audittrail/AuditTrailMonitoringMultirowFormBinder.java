@@ -97,7 +97,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                 // only show unaborted activity
 //                .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
 
-                .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
+                .sorted(Comparator.comparing(WorkflowActivity::getFinishTime))
 
                 // if property showPendingValue is checked, then display open assignment
                 .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
