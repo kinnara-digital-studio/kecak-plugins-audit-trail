@@ -84,7 +84,15 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                     // only show unaborted activity
 //                .filter(activity -> !SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState()))
 
-                    .sorted(Comparator.comparing(WorkflowActivity::getCreatedTime))
+                    .peek(a -> {
+                        final WorkflowActivity info = getRunningActivityInfo(a.getId());
+                        a.setCreatedTime(info.getCreatedTime());
+                        a.setFinishTime(info.getFinishTime());
+                        a.setNameOfAcceptedUser(info.getNameOfAcceptedUser());
+                        a.setAssignmentUsers(info.getAssignmentUsers());
+                        a.setPerformer(info.getPerformer());
+                    })
+                    .sorted(Comparator.comparing(a -> Optional.ofNullable(a).map(WorkflowActivity::getFinishTime).orElseGet(Date::new)))
 
                     // if property showPendingValue is checked, then display open assignment
                     .filter(activity -> "true".equalsIgnoreCase(getPropertyString("showPendingValue"))
@@ -105,8 +113,8 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                             row.setProperty(Fields.PROCESS_NAME.toString(), process == null || process.getName() == null ? "" : process.getName());
                             row.setProperty(Fields.ACTIVITY_ID.toString(), "startProcess");
                             row.setProperty(Fields.ACTIVITY_NAME.toString(), "Start Process");
-                            row.setProperty(Fields.CREATED_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime()));
-                            row.setProperty(Fields.FINISH_TIME.toString(), info == null || info.getStartedTime() == null ? "" : dateFormat.format(info.getStartedTime())); // for start process this should be the same
+                            row.setProperty(Fields.CREATED_TIME.toString(), Optional.ofNullable(info).map(WorkflowProcess::getStartedTime).map(dateFormat::format).orElse(""));
+                            row.setProperty(Fields.FINISH_TIME.toString(), Optional.ofNullable(info).map(WorkflowProcess::getStartedTime).map(dateFormat::format).orElse("")); // for start process this should be the same
                             row.setProperty(Fields.USERNAME.toString(), process == null || process.getRequesterId() == null ? "" : process.getRequesterId());
                             row.setProperty(Fields.USER_FULLNAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFullUsername).orElse(""));
                             row.setProperty(Fields.USER_FIRST_NAME.toString(), Optional.ofNullable(process).map(WorkflowProcess::getRequesterId).map(this::mapUsernameToFirstName).orElse(""));
@@ -119,7 +127,6 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         }
                         return formRowSet;
                     }, (rows, activity) -> {
-                        final WorkflowActivity info = getRunningActivityInfo(activity.getId());
                         final WorkflowActivity definition = getProcessActivityDefinition(activity.getProcessDefId(), activity.getActivityDefId());
 
                         final FormRow row = new FormRow();
@@ -127,7 +134,7 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         if (SharkConstants.STATE_CLOSED_ABORTED.equals(activity.getState())) {
                             // keep aborted activity first data
                             if (keepCreatedDate == null)
-                                keepCreatedDate = info.getCreatedTime();
+                                keepCreatedDate = activity.getCreatedTime();
                             return;
                         }
 
@@ -138,14 +145,14 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                         row.setProperty(Fields.ACTIVITY_ID.toString(), activity.getActivityDefId());
                         row.setProperty(Fields.ACTIVITY_NAME.toString(), activity.getName());
 
-                        row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : info.getCreatedTime()));
+                        row.setProperty(Fields.CREATED_TIME.toString(), dateFormat.format(keepCreatedDate != null ? keepCreatedDate : activity.getCreatedTime()));
                         keepCreatedDate = null;
 
-                        if (info.getFinishTime() != null)
-                            row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(info.getFinishTime()));
+                        if (activity.getFinishTime() != null)
+                            row.setProperty(Fields.FINISH_TIME.toString(), dateFormat.format(activity.getFinishTime()));
 
                         if (isActivity(definition)) {
-                            row.setProperty(Fields.PARTICIPANT.toString(), info.getPerformer());
+                            row.setProperty(Fields.PARTICIPANT.toString(), activity.getPerformer());
 
                             if ("true".equalsIgnoreCase(getPropertyString("toolAsStartProcess")) && WorkflowActivity.TYPE_TOOL.equalsIgnoreCase(definition.getType())) {
                                 WorkflowProcess process = getRunningProcessById(primaryKey);
@@ -154,14 +161,14 @@ public class AuditTrailMonitoringMultirowFormBinder extends FormBinder
                                 row.setProperty(Fields.USER_FULLNAME.toString(), mapUsernameToFullUsername(process.getRequesterId()));
                                 row.setProperty(Fields.USER_FIRST_NAME.toString(), mapUsernameToFirstName(process.getRequesterId()));
                             } else {
-                                row.setProperty(Fields.USERNAME.toString(), info.getNameOfAcceptedUser() != null ? info.getNameOfAcceptedUser() : String.join(",", info.getAssignmentUsers()));
-                                row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                row.setProperty(Fields.USERNAME.toString(), activity.getNameOfAcceptedUser() != null ? activity.getNameOfAcceptedUser() : String.join(",", activity.getAssignmentUsers()));
+                                row.setProperty(Fields.USER_FULLNAME.toString(), Arrays.stream(activity.getNameOfAcceptedUser() != null ? new String[]{activity.getNameOfAcceptedUser()} : activity.getAssignmentUsers())
                                         .filter(u -> !u.isEmpty())
                                         .map(this::mapUsernameToFullUsername)
                                         .filter(u -> !u.isEmpty())
                                         .collect(Collectors.joining(","))
                                 );
-                                row.setProperty(Fields.USER_FIRST_NAME.toString(), Arrays.stream(info.getNameOfAcceptedUser() != null ? new String[]{info.getNameOfAcceptedUser()} : info.getAssignmentUsers())
+                                row.setProperty(Fields.USER_FIRST_NAME.toString(), Arrays.stream(activity.getNameOfAcceptedUser() != null ? new String[]{activity.getNameOfAcceptedUser()} : activity.getAssignmentUsers())
                                         .filter(u -> !u.isEmpty())
                                         .map(this::mapUsernameToFirstName)
                                         .filter(u -> !u.isEmpty())
